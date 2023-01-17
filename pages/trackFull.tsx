@@ -1,14 +1,13 @@
-import * as React from 'react';
 import { useState } from "react";
 import topics from "../public/topic.json";
-import { Topic } from "../Components/Track/Topic";
+import { TopicSmall } from "../Components/Track/TopicSmall";
 import Image from "next/image";
 import discipline1 from "../image/discipline1.svg"
 import discipline2 from "../image/discipline2.svg"
 import discipline3 from "../image/discipline3.svg"
 import discipline4 from "../image/discipline4.svg"
 
-const Track = () => {
+const TrackFull = () => {
 	const [ show, setShow ] = useState('');
 	const [ course, setCourse ] = useState(0);
 	const [ currentTrack, setCurrentTrack ] = useState(0);
@@ -81,11 +80,11 @@ const Track = () => {
 					<div className={`relative h-full 
 					${currentTrack !== 1 && currentTrack !== 0 ? 'invisible opacity-0' : 'visible opacity-100'}
 					duration-200`}>
-						<div className="w-2 min-h-[300px] h-[1300px] bg-red-track"></div>
-						<div className={`absolute top-2 -left-[216px] flex flex-col gap-6`}>
+						<div className="w-[6px] min-h-[300px] h-[650px] bg-red-track"></div>
+						<div className={`absolute top-2 -left-[214px] flex flex-col gap-2`}>
 							{topics.topics.red.map(( topic, index ) => {
 								return (
-									<Topic key={index} buttonHandler={buttonHandler}
+									<TopicSmall key={index} buttonHandler={buttonHandler}
 									       show={show} title={topic.title}
 									       description={topic.description}
 									       color={"red"} left={true} courseCurrent={course} course={topic.course}/>
@@ -96,11 +95,11 @@ const Track = () => {
 					<div className={`relative h-full 
 					${currentTrack !== 2 && currentTrack !== 0 ? 'invisible opacity-0' : 'visible opacity-100'}
 					duration-200`}>
-						<div className="w-2 min-h-[300px] h-full bg-green-track"></div>
-						<div className="absolute top-2 -left-2 flex flex-col gap-6">
+						<div className="w-[6px] min-h-[300px] h-full bg-green-track"></div>
+						<div className="absolute top-2 left-[-6px] flex flex-col gap-2">
 							{topics.topics.green.map(( topic, index ) => {
 								return (
-									<Topic key={index} buttonHandler={buttonHandler}
+									<TopicSmall key={index} buttonHandler={buttonHandler}
 									       show={show} title={topic.title}
 									       description={topic.description}
 									       color={"green"} left={false} courseCurrent={course} course={topic.course}/>
@@ -113,11 +112,11 @@ const Track = () => {
 					<div className={`relative h-full 
 					${currentTrack !== 3 && currentTrack !== 0 ? 'invisible opacity-0' : 'visible opacity-100'}
 					duration-200`}>
-						<div className="w-2 min-h-[300px] h-full bg-blue-track"></div>
-						<div className="absolute top-2 -left-[216px] flex flex-col gap-6">
+						<div className="w-[6px] min-h-[300px] h-full bg-blue-track"></div>
+						<div className="absolute top-2 -left-[214px] flex flex-col gap-2">
 							{topics.topics.blue.map(( topic, index ) => {
 								return (
-									<Topic key={index} buttonHandler={buttonHandler}
+									<TopicSmall key={index} buttonHandler={buttonHandler}
 									       show={show} title={topic.title}
 									       description={topic.description}
 									       color={"blue"} left={true} courseCurrent={course} course={topic.course}/>
@@ -128,11 +127,11 @@ const Track = () => {
 					<div className={`relative h-full 
 					${currentTrack !== 4 && currentTrack !== 0 ? 'invisible opacity-0' : 'visible opacity-100'}
 					duration-200`}>
-						<div className="w-2 min-h-[300px] h-full bg-orange-track"></div>
-						<div className="absolute top-2 -left-2 flex flex-col gap-6">
+						<div className="w-[6px] min-h-[300px] h-full bg-orange-track"></div>
+						<div className="absolute top-2 left-[-6px] flex flex-col gap-2">
 							{topics.topics.orange.map(( topic, index ) => {
 								return (
-									<Topic key={index} buttonHandler={buttonHandler}
+									<TopicSmall key={index} buttonHandler={buttonHandler}
 									       show={show} title={topic.title}
 									       description={topic.description}
 									       color={"orange"} left={false} courseCurrent={course} course={topic.course}/>
@@ -146,7 +145,7 @@ const Track = () => {
 				${currentTrack === 1 ? 'border-red-track text-red-track'
 				: currentTrack === 2 ? 'border-green-track text-green-track'
 					: currentTrack === 3 ? 'border-blue-track text-blue-track'
-						: currentTrack === 4 ? 'border-orange-track text-orange-track' 
+						: currentTrack === 4 ? 'border-orange-track text-orange-track'
 							: 'border-red-track text-red-track grayscale'} rounded-tr-3xl rounded-tl-3xl py-4`}>
 				<p className="font-bold text-lg uppercase">Образовательный трек</p>
 			</div>
@@ -154,4 +153,4 @@ const Track = () => {
 	);
 };
 
-export default Track;
+export default TrackFull;

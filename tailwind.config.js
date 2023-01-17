@@ -11,6 +11,12 @@ module.exports = {
       fontFamily: {
         sans: ['var(--font-rubik)', ...fontFamily.sans],
       },
+      colors: {
+        "red-track": "#FD7C93",
+        "green-track": "#66E4B7",
+        "blue-track": "#6673E4",
+        "orange-track": "#FB9257",
+      }
     },
   },
   plugins: [],

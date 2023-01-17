@@ -10,7 +10,7 @@ type Props = {
 	course: string[],
 	courseCurrent: number,
 };
-export const Topic = ( {buttonHandler, show, title, description, color, left, course, courseCurrent}: Props ) => {
+export const TopicSmall = ( {buttonHandler, show, title, description, color, left, course, courseCurrent}: Props ) => {
 	let currentColor;
 	switch (color) {
 		case 'red': {
@@ -36,13 +36,13 @@ export const Topic = ( {buttonHandler, show, title, description, color, left, co
 			<button id={title} onClick={buttonHandler} className="flex items-center gap-2 z-10">
 				{left ?
 					<>
-						<p className={`w-[200px] ${course.map((el) => el === String(courseCurrent))[0] ? 'text-[16px] font-bold' : 'text-sm font-medium'} hover:opacity-60`}>{title}</p>
-						<div className={`${course.map((el) => el === String(courseCurrent))[0] ? 'w-10 h-10 ml-[-8px] border-[8px]' : 'w-6 h-6 border-[6px]'} ${currentColor} bg-white rounded-full`}></div>
+						<p className={`w-[200px] ${course.map((el) => el === String(courseCurrent))[0] ? 'text-[12px] font-bold' : 'text-[11px] font-medium'} hover:opacity-60`}>{title}</p>
+						<div className={`${course.map((el) => el === String(courseCurrent))[0] ? 'w-6 h-6 ml-[-4px] border-[6px]' : 'w-4 h-4 border-[4px]'} ${currentColor} bg-white rounded-full`}></div>
 					</>
 					:
 					<>
-						<div className={`${course.map((el) => el === String(courseCurrent))[0] ? 'w-10 h-10 ml-[-8px] border-[8px]' : 'w-6 h-6 border-[6px]'} ${currentColor} bg-white rounded-full`}></div>
-						<p className={`w-[200px] ${course.map((el) => el === String(courseCurrent))[0] ? 'text-[16px] font-bold' : 'text-sm font-medium'} hover:opacity-60`}>{title}</p>
+						<div className={`${course.map((el) => el === String(courseCurrent))[0] ? 'w-6 h-6 ml-[-4px] border-[6px]' : 'w-4 h-4 border-[4px]'} ${currentColor} bg-white rounded-full`}></div>
+						<p className={`w-[200px] ${course.map((el) => el === String(courseCurrent))[0] ? 'text-[12px] font-bold' : 'text-[11px] font-medium'} hover:opacity-60`}>{title}</p>
 					</>}
 			</button>
 			<div className={`absolute ${show === title ? 'visible opacity-100': 'invisible opacity-0'} 
