@@ -13,8 +13,8 @@ interface Props {
 export const Header = ( { isOpen, setIsOpen }: Props ) => {
 	const router = useRouter();
 	return (
-		<div className={`w-full bg-dark z-50 mb-12`}>
-			<header className="container mx-auto top-0 h-fit flex flex-row justify-between items-center py-[50px] px-6 gap-4">
+		<div className={`w-full bg-dark z-50 mb-2`}>
+			<header className="top-0 h-fit flex flex-row justify-between items-center py-4 px-6 gap-4">
 				<div className="relative left-0">
 					<Link href='/' className="cursor-pointer">
 						<Image

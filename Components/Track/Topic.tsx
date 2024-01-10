@@ -36,13 +36,13 @@ export const Topic = ( {buttonHandler, show, title, description, color, left, co
 			<button id={title} onClick={buttonHandler} className="flex items-center gap-2 z-10">
 				{left ?
 					<>
-						<p className={`w-[200px] ${course.map((el) => el === String(courseCurrent))[0] ? 'text-[16px] font-bold' : 'text-sm font-medium'} hover:opacity-60`}>{title}</p>
-						<div className={`${course.map((el) => el === String(courseCurrent))[0] ? 'w-10 h-10 ml-[-8px] border-[8px]' : 'w-6 h-6 border-[6px]'} ${currentColor} bg-white rounded-full`}></div>
+						<p className={`w-[230px] ${course.map((el) => el === String(courseCurrent))[0] ? 'text-[14px] font-bold' : 'text-[12px] font-medium'} hover:opacity-60`}>{title}</p>
+						<div className={`${course.map((el) => el === String(courseCurrent))[0] ? 'w-8 h-8 ml-[-6px] border-[8px]' : 'w-5 h-5 border-[6px]'} ${currentColor} bg-white rounded-full`}></div>
 					</>
 					:
 					<>
-						<div className={`${course.map((el) => el === String(courseCurrent))[0] ? 'w-10 h-10 ml-[-8px] border-[8px]' : 'w-6 h-6 border-[6px]'} ${currentColor} bg-white rounded-full`}></div>
-						<p className={`w-[200px] ${course.map((el) => el === String(courseCurrent))[0] ? 'text-[16px] font-bold' : 'text-sm font-medium'} hover:opacity-60`}>{title}</p>
+						<div className={`${course.map((el) => el === String(courseCurrent))[0] ? 'w-8 h-8 ml-[-6px] border-[8px]' : 'w-5 h-5 border-[6px]'} ${currentColor} bg-white rounded-full`}></div>
+						<p className={`w-[230px] ${course.map((el) => el === String(courseCurrent))[0] ? 'text-[14px] font-bold' : 'text-[12px] font-medium'} hover:opacity-60`}>{title}</p>
 					</>}
 			</button>
 			<div className={`absolute ${show === title ? 'visible opacity-100': 'invisible opacity-0'} 
