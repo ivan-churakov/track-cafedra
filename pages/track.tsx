@@ -7,6 +7,7 @@ import discipline1 from "../image/discipline1.svg";
 import discipline2 from "../image/discipline2.svg";
 import discipline3 from "../image/discipline3.svg";
 import discipline4 from "../image/discipline4.svg";
+import vsetreki from "../image/vsetreki.svg";
 
 const Track = () => {
   const [show, setShow] = useState("");
@@ -72,7 +73,7 @@ const Track = () => {
         >
           <Image
             className={"grayscale min-w-[78px]"}
-            src={discipline4}
+            src={vsetreki}
             alt={""}
           />
           <h4 className={"text-sm text-left"}>Показать все треки</h4>
@@ -115,6 +116,7 @@ const Track = () => {
           Без фильтра
         </button>
       </div>
+      
       <div className="relative h-full mx-[200px]">
         <div
           className={`${
@@ -127,7 +129,7 @@ const Track = () => {
           <div className="absolute top-[660px] left-[300px] origin-top-left -rotate-45 w-2 h-[150px] bg-red-track"></div>
           <div className="absolute top-[761px] left-[404px] w-2 h-[100px] bg-red-track"></div>
           <div
-            className={`absolute w-[266px] top-[100px] left-[56px] flex flex-col gap-3`}
+            className={`absolute w-[266px] top-[100px] left-[56px] flex flex-col gap-1`}
           >
             {topics.topics.red.map((topic, index) => {
               return (
@@ -136,7 +138,11 @@ const Track = () => {
                   buttonHandler={buttonHandler}
                   show={show}
                   title={topic.title}
-                  description={topic.description}
+                  exam={topic?.exam}
+                  test={topic?.test}
+                  creditUnit={topic?.creditUnit}
+                  lecture={topic?.lecture}
+                  practice={topic?.practice}
                   color={"red"}
                   left={true}
                   courseCurrent={course}
@@ -165,7 +171,11 @@ const Track = () => {
                   buttonHandler={buttonHandler}
                   show={show}
                   title={topic.title}
-                  description={topic.description}
+                  exam={topic?.exam}
+                  test={topic?.test}
+                  creditUnit={topic?.creditUnit}
+                  lecture={topic?.lecture}
+                  practice={topic?.practice}
                   color={"green"}
                   left={false}
                   courseCurrent={course}
@@ -194,7 +204,11 @@ const Track = () => {
                   buttonHandler={buttonHandler}
                   show={show}
                   title={topic.title}
-                  description={topic.description}
+                  exam={topic?.exam}
+                  test={topic?.test}
+                  creditUnit={topic?.creditUnit}
+                  lecture={topic?.lecture}
+                  practice={topic?.practice}
                   color={"blue"}
                   left={true}
                   courseCurrent={course}
@@ -223,7 +237,11 @@ const Track = () => {
                   buttonHandler={buttonHandler}
                   show={show}
                   title={topic.title}
-                  description={topic.description}
+                  exam={topic?.exam}
+                  test={topic?.test}
+                  creditUnit={topic?.creditUnit}
+                  lecture={topic?.lecture}
+                  practice={topic?.practice}
                   color={"orange"}
                   left={false}
                   courseCurrent={course}

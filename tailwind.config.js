@@ -12,10 +12,10 @@ module.exports = {
         sans: ['var(--font-rubik)', ...fontFamily.sans],
       },
       colors: {
-        "red-track": "#FD7C93",
-        "green-track": "#66E4B7",
-        "blue-track": "#6673E4",
-        "orange-track": "#FB9257",
+        "red-track": "#D4D4D4",
+        "green-track": "#646464",
+        "blue-track": "#1a6bb1",
+        "orange-track": "#5DA7B5",
       }
     },
   },
