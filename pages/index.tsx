@@ -8,6 +8,7 @@ import discipline2 from "../image/discipline2.svg";
 import discipline3 from "../image/discipline3.svg";
 import discipline4 from "../image/discipline4.svg";
 import vsetreki from "../image/vsetreki.svg";
+import qr from "../image/qr-code.png";
 
 export default function Home() {
   const [show, setShow] = useState("");
@@ -75,7 +76,7 @@ export default function Home() {
           <h4 className={"text-sm text-left"}>Показать все треки</h4>
         </button>
       </div>
-      <div className={"absolute top-[400px] flex flex-col gap-4 mb-16"}>
+      <div className={"absolute top-[300px] flex flex-col gap-4 mb-16"}>
         <button
           onClick={courseHandler}
           name={"1"}
@@ -112,6 +113,7 @@ export default function Home() {
           Без фильтра
         </button>
       </div>
+      <Image className="absolute bottom-[20px] left-[20px] w-[200px] 2xl:w-[300px] h-[200px] 2xl:h-[300px]" src={qr} alt="qr"/>
       <div className="absolute flex justify-center items-center rounded-2xl bottom-0 2xl:bottom-[-15px] left-[calc(50%-240px)] w-[680px] h-[80px] bg-white border-[8px] border-red-track text-2xl z-20">
         Образовательный трек
       </div>
