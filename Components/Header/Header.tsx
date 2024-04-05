@@ -14,16 +14,9 @@ export const Header = ({ isOpen, setIsOpen }: Props) => {
   const router = useRouter();
   return (
     <div className={`w-full bg-dark z-50 mb-2`}>
-      <header className="absolute w-full top-0 h-fit flex items-end flex-row justify-between py-4 px-6 gap-4">
+      <header className="w-full h-fit flex items-end flex-row justify-between py-4 px-6 gap-4">
         <div className="w-full">
           <Link href="/" className="flex items-end flex-col cursor-pointer">
-            {/* <Image
-							className="cursor-pointer"
-							alt="КБ-9"
-							src={logo}
-							width={118}
-							height={24}
-						/> */}
             <span className="text-2xl">
               Профиль “Разработка кроссплатформенных бизнес-приложений”
             </span>
