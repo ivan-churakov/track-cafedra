@@ -8,10 +8,10 @@ import discipline2 from "../image/discipline2.svg";
 import discipline3 from "../image/discipline3.svg";
 import discipline4 from "../image/discipline4.svg";
 import cross from "../image/cross.svg";
-import trackImg from "../image/trackImg.jpeg";
+import trackImg from "../image/track.svg";
 import logo from "../image/logo.jpg";
-import card4 from "../image/card1.png";
-import card2 from "../image/card2.png";
+import card4 from "../image/cardSoty.svg";
+import card2 from "../image/card123.svg";
 import card11 from "../image/card11.png";
 import logoKB from "../image/KBSP_white.png";
 import { Video } from "../Components/Video/Video";
@@ -80,7 +80,7 @@ export default function Home() {
             alt="cross"
           />
           <Image
-            className="w-full h-full object-contain"
+            className="w-full h-full object-cover"
             src={card2}
             alt="Картинка трека предметов"
           />
