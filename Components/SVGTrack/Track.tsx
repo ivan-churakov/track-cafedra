@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import topics from "../../public/topic.json";
 import Link from "next/link";
 import Image from "next/image";
-import qr from "../../image/qr-code.png";
+import qr from "../../image/qr-code.gif";
 
 export const Track = () => {
   const [course, setCourse] = useState(0);
@@ -23,11 +23,11 @@ export const Track = () => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 768);
     };
-    
+
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    
-    return () => window.removeEventListener('resize', checkMobile);
+    window.addEventListener("resize", checkMobile);
+
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   const handleTopicHover = (topic: any, x: number, y: number) => {
@@ -131,6 +131,41 @@ export const Track = () => {
     setIsDragging(false);
   };
 
+  const formatText = (topic: {
+    title: string;
+    exam: string;
+    test: string;
+    creditUnit: string;
+    lecture: string;
+    practice: string;
+    course: string[];
+  }) => {
+    const maxCharsPerLine = 40;
+    const words = topic.title.split(" ");
+    const lines: string[] = [];
+
+    let i = 0;
+    while (i < words.length) {
+      let lineWords = [words[i]];
+      let totalLength = words[i].length;
+
+      for (let j = 1; j < 3 && i + j < words.length; j++) {
+        const nextWord = words[i + j];
+        if (totalLength + 1 + nextWord.length <= maxCharsPerLine) {
+          lineWords.push(nextWord);
+          totalLength += 1 + nextWord.length; // +1 for space
+        } else {
+          break;
+        }
+      }
+
+      lines.push(lineWords.join(" "));
+      i += lineWords.length;
+    }
+
+    return lines;
+  };
+
   useEffect(() => {
     const preventDefault = (e: WheelEvent) => {
       if (e.metaKey || e.ctrlKey) e.preventDefault();
@@ -142,8 +177,12 @@ export const Track = () => {
 
   return (
     <>
-      <div className={`fixed z-10 flex flex-col gap-4 bg-white p-4 rounded-md ${isMobile ? 'w-full' : ''}`}>
-        <div className={`flex gap-2 ${isMobile ? 'flex-wrap' : ''}`}>
+      <div
+        className={`fixed z-10 flex flex-col gap-4 bg-white p-4 rounded-md ${
+          isMobile ? "w-full" : ""
+        }`}
+      >
+        <div className={`flex gap-2 ${isMobile ? "flex-wrap" : ""}`}>
           <Link
             href="/"
             className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
@@ -256,7 +295,8 @@ export const Track = () => {
               <div className="w-5 h-5 rounded-full border-4 border-blue-500"></div>
             </button>
             <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 px-2 py-1 bg-gray-800 text-white text-sm rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
-              Дисциплины цикла &quot;Разработка, внедрение, сопровождение ИС&quot; (профиль РКБП)
+              Дисциплины цикла &quot;Разработка, внедрение, сопровождение
+              ИС&quot; (профиль РКБП)
             </div>
           </div>
 
@@ -270,7 +310,8 @@ export const Track = () => {
               <div className="w-5 h-5 rounded-full border-4 border-orange-500"></div>
             </button>
             <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 px-2 py-1 bg-gray-800 text-white text-sm rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
-              Дисциплины цикла &quot;Информационные системы и технологии&quot; (профиль РКБП)
+              Дисциплины цикла &quot;Информационные системы и технологии&quot;
+              (профиль РКБП)
             </div>
           </div>
         </div>
@@ -304,7 +345,11 @@ export const Track = () => {
         >
           {/* Красная линия */}
           <path
-            d={isMobile ? "M 100 40 L 100 620 L 50 724 L 50 1040" : "M 170 40 L 170 620 L 66 724 L 66 1040"}
+            d={
+              isMobile
+                ? "M 100 40 L 100 620 L 50 724 L 50 900"
+                : "M 170 100 L 170 620 L 66 724 L 66 900"
+            }
             stroke="#EF4444"
             strokeWidth="8"
             fill="none"
@@ -316,20 +361,27 @@ export const Track = () => {
           />
           {topics.topics.red.map((topic, index) => {
             let point;
-            if (index < 11) {
-              point = { x: isMobile ? 100 : 170, y: 52 + index * 50 };
+            if (index < 10) {
+              point = { x: isMobile ? 100 : 170, y: 100 + index * 50 };
             } else {
-              const t = (index - 11) / 2;
+              const t = (index - 10) / 2;
               if (t <= 1) {
-                point = getPointOnLine(isMobile ? 100 : 170, 620, isMobile ? 50 : 66, 724, t);
+                point = getPointOnLine(
+                  isMobile ? 100 : 170,
+                  620,
+                  isMobile ? 50 : 66,
+                  724,
+                  t
+                );
               } else {
-                point = { x: isMobile ? 50 : 66, y: 724 + (index - 13) * 50 };
+                point = { x: isMobile ? 50 : 66, y: 782 + (index - 13) * 50 };
               }
             }
             const isActive =
               course === 0 || topic.course.includes(course.toString());
             const isTrackVisible =
               selectedTrack === "all" || selectedTrack === "red";
+            const lines = formatText(topic);
             return (
               <g
                 key={index}
@@ -337,7 +389,11 @@ export const Track = () => {
                   handleTopicHover(topic, e.clientX, e.clientY);
                 }}
                 onTouchStart={(e) => {
-                  handleTopicHover(topic, e.touches[0].clientX, e.touches[0].clientY);
+                  handleTopicHover(
+                    topic,
+                    e.touches[0].clientX,
+                    e.touches[0].clientY
+                  );
                 }}
                 onMouseLeave={() => setHoveredTopic(null)}
                 onTouchEnd={() => setHoveredTopic(null)}
@@ -354,21 +410,30 @@ export const Track = () => {
                   stroke="#EF4444"
                   strokeWidth={isActive ? 8 : 6}
                 />
-                <text
-                  x={point.x - 30}
-                  y={point.y + 5}
-                  textAnchor="end"
-                  className={`${isActive ? "font-bold text-base" : "text-sm"} ${isMobile ? 'text-xs' : ''}`}
-                >
-                  {topic.title}
-                </text>
+                {lines.map((line, idx) => (
+                  <text
+                    key={idx}
+                    x={point.x - 30}
+                    y={point.y + 5 + idx * 15}
+                    textAnchor="end"
+                    className={`${isActive ? "font-bold text-base" : "text-sm"} ${
+                      isMobile ? "text-xs" : ""
+                    }`}
+                  >
+                    {line}
+                  </text>
+                ))}
               </g>
             );
           })}
 
           {/* Зеленая линия */}
           <path
-            d={isMobile ? "M 170 40 L 170 620 L 120 724 L 120 1040" : "M 300 40 L 300 620 L 196 724 L 196 1040"}
+            d={
+              isMobile
+                ? "M 170 40 L 170 620 L 120 724 L 120 900"
+                : "M 300 40 L 300 620 L 196 724 L 196 900"
+            }
             stroke="#22C55E"
             strokeWidth="8"
             fill="none"
@@ -384,7 +449,13 @@ export const Track = () => {
             } else {
               const t = (index - 11) / 2;
               if (t <= 1) {
-                point = getPointOnLine(isMobile ? 170 : 300, 620, isMobile ? 120 : 196, 724, t);
+                point = getPointOnLine(
+                  isMobile ? 170 : 300,
+                  620,
+                  isMobile ? 120 : 196,
+                  724,
+                  t
+                );
               } else {
                 point = { x: isMobile ? 120 : 196, y: 724 + (index - 13) * 50 };
               }
@@ -393,6 +464,7 @@ export const Track = () => {
               course === 0 || topic.course.includes(course.toString());
             const isTrackVisible =
               selectedTrack === "all" || selectedTrack === "green";
+            const lines = formatText(topic)
             return (
               <g
                 key={index}
@@ -400,7 +472,11 @@ export const Track = () => {
                   handleTopicHover(topic, e.clientX, e.clientY);
                 }}
                 onTouchStart={(e) => {
-                  handleTopicHover(topic, e.touches[0].clientX, e.touches[0].clientY);
+                  handleTopicHover(
+                    topic,
+                    e.touches[0].clientX,
+                    e.touches[0].clientY
+                  );
                 }}
                 onMouseLeave={() => setHoveredTopic(null)}
                 onTouchEnd={() => setHoveredTopic(null)}
@@ -417,21 +493,30 @@ export const Track = () => {
                   stroke="#22C55E"
                   strokeWidth={isActive ? 8 : 6}
                 />
-                <text
-                  x={point.x + 30}
-                  y={point.y + 5}
-                  textAnchor="start"
-                  className={`${isActive ? "font-bold text-base" : "text-sm"} ${isMobile ? 'text-xs' : ''}`}
-                >
-                  {topic.title}
-                </text>
+                {lines.map((line, idx) => (
+                  <text
+                    key={idx}
+                    x={point.x + 30}
+                    y={point.y + 5 + idx * 15}
+                    textAnchor="start"
+                    className={`${isActive ? "font-bold text-base" : "text-sm"} ${
+                      isMobile ? "text-xs" : ""
+                    }`}
+                  >
+                    {line}
+                  </text>
+                ))}
               </g>
             );
           })}
 
           {/* Синяя линия */}
           <path
-            d={isMobile ? "M 630 40 L 630 720 L 700 824 L 700 1040" : "M 1020 40 L 1020 720 L 1124 824 L 1124 1040"}
+            d={
+              isMobile
+                ? "M 630 40 L 630 720 L 700 824 L 700 900"
+                : "M 1020 40 L 1020 720 L 1124 824 L 1124 900"
+            }
             stroke="#3B82F6"
             strokeWidth="8"
             fill="none"
@@ -449,17 +534,27 @@ export const Track = () => {
               point = { x: isMobile ? 630 : 1020, y: 52 + index * 60 };
             } else if (index < maxPointsOnVertical + maxPointsOnCurve) {
               const t = (index - maxPointsOnVertical) / maxPointsOnCurve;
-              point = getPointOnLine(isMobile ? 630 : 1020, 720, isMobile ? 700 : 1124, 824, t);
+              point = getPointOnLine(
+                isMobile ? 630 : 1020,
+                720,
+                isMobile ? 700 : 1124,
+                824,
+                t
+              );
             } else {
               const remainingPoints =
                 index - (maxPointsOnVertical + maxPointsOnCurve);
-              point = { x: isMobile ? 700 : 1124, y: 824 + remainingPoints * 50 };
+              point = {
+                x: isMobile ? 700 : 1124,
+                y: 824 + remainingPoints * 50,
+              };
             }
 
             const isActive =
               course === 0 || topic.course.includes(course.toString());
             const isTrackVisible =
               selectedTrack === "all" || selectedTrack === "blue";
+            const lines = formatText(topic);
             return (
               <g
                 key={index}
@@ -467,7 +562,11 @@ export const Track = () => {
                   handleTopicHover(topic, e.clientX, e.clientY);
                 }}
                 onTouchStart={(e) => {
-                  handleTopicHover(topic, e.touches[0].clientX, e.touches[0].clientY);
+                  handleTopicHover(
+                    topic,
+                    e.touches[0].clientX,
+                    e.touches[0].clientY
+                  );
                 }}
                 onMouseLeave={() => setHoveredTopic(null)}
                 onTouchEnd={() => setHoveredTopic(null)}
@@ -484,33 +583,30 @@ export const Track = () => {
                   stroke="#3B82F6"
                   strokeWidth={isActive ? 8 : 6}
                 />
-                {topic.title
-                  .split(" ")
-                  .reduce((acc: JSX.Element[], word, i, arr) => {
-                    if (i % 2 === 0) {
-                      acc.push(
-                        <text
-                          key={i}
-                          x={point.x - 30}
-                          y={point.y + 5 + Math.floor(i / 2) * 15}
-                          textAnchor="end"
-                          className={`${
-                            isActive ? "font-bold text-base" : "text-sm"
-                          } text-end ${isMobile ? 'text-xs' : ''}`}
-                        >
-                          {arr[i] + (arr[i + 1] ? " " + arr[i + 1] : "")}
-                        </text>
-                      );
-                    }
-                    return acc;
-                  }, [])}
+                {lines.map((line, idx) => (
+                  <text
+                    key={idx}
+                    x={point.x - 30}
+                    y={point.y + 5 + idx * 15}
+                    textAnchor="end"
+                    className={`${
+                      isActive ? "font-bold text-base" : "text-sm"
+                    } text-end ${isMobile ? "text-xs" : ""}`}
+                  >
+                    {line}
+                  </text>
+                ))}
               </g>
             );
           })}
 
           {/* Оранжевая линия */}
           <path
-            d={isMobile ? "M 700 40 L 700 620 L 750 724 L 750 1040" : "M 1150 40 L 1150 620 L 1254 724 L 1254 1040"}
+            d={
+              isMobile
+                ? "M 700 40 L 700 620 L 750 724 L 750 900"
+                : "M 1150 100 L 1150 620 L 1254 724 L 1254 900"
+            }
             stroke="#F97316"
             strokeWidth="8"
             fill="none"
@@ -522,19 +618,29 @@ export const Track = () => {
           {topics.topics.orange.map((topic, index) => {
             let point;
             if (index < 11) {
-              point = { x: isMobile ? 700 : 1150, y: 52 + index * 50 };
+              point = { x: isMobile ? 700 : 1150, y: 102 + index * 50 };
             } else {
-              const t = (index - 11) / 2;
+              const t = (index - 10) / 2;
               if (t <= 1) {
-                point = getPointOnLine(isMobile ? 700 : 1150, 620, isMobile ? 750 : 1254, 724, t);
+                point = getPointOnLine(
+                  isMobile ? 700 : 1150,
+                  620,
+                  isMobile ? 750 : 1254,
+                  724,
+                  t
+                );
               } else {
-                point = { x: isMobile ? 750 : 1254, y: 724 + (index - 13) * 50 };
+                point = {
+                  x: isMobile ? 750 : 1254,
+                  y: 724 + (index - 13) * 50,
+                };
               }
             }
             const isActive =
               course === 0 || topic.course.includes(course.toString());
             const isTrackVisible =
               selectedTrack === "all" || selectedTrack === "orange";
+            const lines = formatText(topic)
             return (
               <g
                 key={index}
@@ -542,7 +648,11 @@ export const Track = () => {
                   handleTopicHover(topic, e.clientX, e.clientY);
                 }}
                 onTouchStart={(e) => {
-                  handleTopicHover(topic, e.touches[0].clientX, e.touches[0].clientY);
+                  handleTopicHover(
+                    topic,
+                    e.touches[0].clientX,
+                    e.touches[0].clientY
+                  );
                 }}
                 onMouseLeave={() => setHoveredTopic(null)}
                 onTouchEnd={() => setHoveredTopic(null)}
@@ -559,14 +669,19 @@ export const Track = () => {
                   stroke="#F97316"
                   strokeWidth={isActive ? 8 : 6}
                 />
-                <text
-                  x={point.x + 30}
-                  y={point.y + 5}
-                  textAnchor="start"
-                  className={`${isActive ? "font-bold text-base" : "text-sm"} ${isMobile ? 'text-xs' : ''}`}
-                >
-                  {topic.title}
-                </text>
+                {lines.map((line, idx) => (
+                  <text
+                    key={idx}
+                    x={point.x + 30}
+                    y={point.y + 5 + idx * 15}
+                    textAnchor="start"
+                    className={`${
+                      isActive ? "font-bold text-base" : "text-sm"
+                    } text-end ${isMobile ? "text-xs" : ""}`}
+                  >
+                    {line}
+                  </text>
+                ))}
               </g>
             );
           })}
@@ -574,7 +689,7 @@ export const Track = () => {
           {/* Подпись "Образовательный трек" */}
           <rect
             x={isMobile ? "30" : "60"}
-            y="1040"
+            y="900"
             width={isMobile ? "740" : "1200"}
             height="60"
             rx="10"
@@ -585,9 +700,9 @@ export const Track = () => {
           />
           <text
             x={isMobile ? "400" : "675"}
-            y="1077"
+            y="937"
             textAnchor="middle"
-            className={`text-xl font-bold ${isMobile ? 'text-base' : ''}`}
+            className={`text-xl font-bold ${isMobile ? "text-base" : ""}`}
             fill="#000000"
           >
             Образовательный трек
@@ -608,14 +723,14 @@ export const Track = () => {
         <div
           className="fixed bg-white p-4 rounded-lg shadow-lg transition-transform z-20"
           style={{
-            left: isMobile ? '50%' : hoverPosition.x + 20,
-            top: isMobile ? '50%' : hoverPosition.y,
-            maxWidth: isMobile ? '90%' : `${(300 * scale) / 1.3}px`,
-            minWidth: isMobile ? 'auto' : '300px',
-            transform: isMobile ? 
-              'translate(-50%, -50%)' : 
-              `scale(${scale > 1 ? scale / 1.3 : scale / 1.1})`,
-            transformOrigin: isMobile ? 'center' : 'top left',
+            left: isMobile ? "50%" : hoverPosition.x + 20,
+            top: isMobile ? "50%" : hoverPosition.y,
+            maxWidth: isMobile ? "90%" : `${(300 * scale) / 1.3}px`,
+            minWidth: isMobile ? "auto" : "300px",
+            transform: isMobile
+              ? "translate(-50%, -50%)"
+              : `scale(${scale > 1 ? scale / 1.3 : scale / 1.1})`,
+            transformOrigin: isMobile ? "center" : "top left",
           }}
         >
           <h3 className="text-lg font-bold mb-2">{hoveredTopic.title}</h3>
