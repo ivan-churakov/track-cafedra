@@ -67,6 +67,7 @@ jobs:
 
       - name: Create Pull Request to main
         uses: peter-evans/create-pull-request@v5
+        id: cpr
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "chore: automatic PR from development"
@@ -75,6 +76,11 @@ jobs:
           title: "Merge development into main"
           body: "Автоматический PR после успешного прохождения всех тестов"
           allow-empty-commit: true
+
+  automerge:
+    needs: create-pr
+    runs-on: ubuntu-latest
+    steps:
       - name: Auto-merge PR
         uses: pascalgn/automerge-action@v0.15.2
         env:
