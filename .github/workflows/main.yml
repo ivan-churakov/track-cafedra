@@ -74,3 +74,4 @@ jobs:
           base: main
           title: "Merge development into main"
           body: "Автоматический PR после успешного прохождения всех тестов"
+          allow-empty: true
