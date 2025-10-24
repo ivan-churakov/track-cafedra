@@ -96,7 +96,7 @@ export default function Home() {
           />
         </div>
       </div>
-      <div className="flex flex-col h-full justify-between items-center gap-10 p-4 sm:p-6">
+      <div className="h-full flex flex-col justify-between items-center gap-10 p-4 sm:p-6">
         <div className="grid grid-cols-3 gap-8">
           <div
             onClick={() => setShow1(true)}
