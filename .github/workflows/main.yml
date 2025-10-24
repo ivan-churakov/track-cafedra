@@ -74,4 +74,9 @@ jobs:
           base: main
           title: "Merge development into main"
           body: "Автоматический PR после успешного прохождения всех тестов"
-          allow-empty: true
+          allow-empty-commit: true
+      - name: Auto-merge PR
+        uses: pascalgn/automerge-action@v0.15.2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          merge_method: squash
