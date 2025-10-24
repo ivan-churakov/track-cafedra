@@ -30,7 +30,9 @@ jobs:
         run: |
           git config --global user.name "CI Bot"
           git config --global user.email "ci@example.com"
-          git checkout release || git checkout -b release
+          git fetch origin release:release || git checkout -b release
+          git checkout release
+          git merge origin/release --allow-unrelated-histories -m "Merge remote release before updating docs"
           git add docs
           git diff-index --quiet HEAD || git commit -m "docs: обновление документации [ci skip]"
           git push origin release
