@@ -18,7 +18,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Generate documentation
-        run: npx typedoc --out docs src
+        run: npx typedoc --out docs
       - name: Commit and push docs
         run: |
           git config --global user.name "CI Bot"
