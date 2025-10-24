@@ -9,20 +9,28 @@ on:
 jobs:
   docs:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v3
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20
+
       - name: Install dependencies
         run: npm ci
+
       - name: Generate documentation
         run: npx typedoc --out docs
-      - name: Commit and push docs
+
+      - name: Commit and push docs to release branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --global user.name "CI Bot"
           git config --global user.email "ci@example.com"
+          git checkout release || git checkout -b release
           git add docs
-          git commit -m "docs: обновление документации [ci skip]" || echo "No changes to commit"
-          git push origin HEAD:release
+          git diff-index --quiet HEAD || git commit -m "docs: обновление документации [ci skip]"
+          git push origin release
