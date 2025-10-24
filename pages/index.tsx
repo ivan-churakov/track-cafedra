@@ -81,7 +81,7 @@ export default function Home() {
         } w-full h-full bg-black/30 absolute transition-opacity top-0`}
       >
         <div
-          className={`relative mx-auto bg-white overflow-hidden w-[95%] h-[86vh] rounded-2xl shadow-2xl mt-[40px] p-8`}
+          className={`relative w-[95%] h-[86vh] mx-auto bg-white overflow-hidden rounded-2xl shadow-2xl mt-[40px] p-8`}
         >
           <Image
             className="absolute top-6 right-6 cursor-pointer"
