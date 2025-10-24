@@ -65,9 +65,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Create Pull Request to main
+      - name: Create and merge PR from development to main
         uses: peter-evans/create-pull-request@v5
-        id: cpr
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "chore: automatic PR from development"
@@ -76,12 +75,5 @@ jobs:
           title: "Merge development into main"
           body: "Автоматический PR после успешного прохождения всех тестов"
           allow-empty-commit: true
+          merge-method: merge
 
-  automerge:
-    needs: create-pr
-    runs-on: ubuntu-latest
-    steps:
-      - name: Auto-merge PR
-        uses: pascalgn/automerge-action@v0.15.2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
