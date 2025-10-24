@@ -1,0 +1,6 @@
+{
+  "entryPoints": ["pages", "Components"],
+  "out": "docs",
+  "exclude": ["**/__tests__/**"],
+  "includeVersion": true
+}
