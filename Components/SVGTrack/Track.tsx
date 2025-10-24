@@ -360,7 +360,7 @@ export const Track = () => {
             }}
           />
           {topics.topics.red.map((topic, index) => {
-            let point;
+            let point = {x: 0, y: 0};
             if (index < 10) {
               point = { x: isMobile ? 100 : 170, y: 100 + index * 50 };
             } else {
@@ -443,7 +443,7 @@ export const Track = () => {
             }}
           />
           {topics.topics.green.map((topic, index) => {
-            let point;
+            let point = {x: 0, y: 0};
             if (index < 11) {
               point = { x: isMobile ? 170 : 300, y: 52 + index * 50 };
             } else {
@@ -526,7 +526,7 @@ export const Track = () => {
             }}
           />
           {topics.topics.blue.map((topic, index) => {
-            let point;
+            let point = {x: 0, y: 0};
             const maxPointsOnVertical = 11;
             const maxPointsOnCurve = 1;
 
@@ -616,7 +616,7 @@ export const Track = () => {
             }}
           />
           {topics.topics.orange.map((topic, index) => {
-            let point;
+            let point = {x: 0, y: 0};
             if (index < 11) {
               point = { x: isMobile ? 700 : 1150, y: 102 + index * 50 };
             } else {
