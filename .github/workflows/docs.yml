@@ -1,0 +1,28 @@
+name: Generate Docs
+
+on:
+  push:
+    branches:
+      - main
+      - release
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm ci
+      - name: Generate documentation
+        run: npx typedoc --out docs src
+      - name: Commit and push docs
+        run: |
+          git config --global user.name "CI Bot"
+          git config --global user.email "ci@example.com"
+          git add docs
+          git commit -m "docs: обновление документации [ci skip]" || echo "No changes to commit"
+          git push origin HEAD:release
