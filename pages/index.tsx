@@ -98,7 +98,7 @@ export default function Home() {
       </div>
       <div className="h-full flex flex-col justify-between items-center gap-10 p-4 sm:p-6">
         <div className="grid grid-cols-3 gap-8">
-          <div
+          {/* <div
             onClick={() => setShow1(true)}
             className="flex flex-col bg-white shadow-2xl rounded-xl p-4 cursor-pointer"
           >
@@ -110,7 +110,20 @@ export default function Home() {
               src={card4}
               alt="Картинка трека предметов"
             />
-          </div>
+          </div> */}
+          <Link
+            href={"/track2"}
+            className="flex flex-col bg-white shadow-2xl rounded-xl p-4"
+          >
+            <p className="font-medium text-center text-xl">
+              09.03.02 профиль ТВрП
+            </p>
+            <Image
+              className="w-full h-full object-contain"
+              src={trackImg}
+              alt="Картинка трека предметов"
+            />
+          </Link>
           <div
             onClick={() => setShow2(true)}
             className="flex flex-col bg-white shadow-2xl rounded-xl p-4 cursor-pointer"
