@@ -1,10 +1,32 @@
 import React, { useState, useRef, useEffect } from "react";
-import topics from "../../public/topic.json";
 import Link from "next/link";
 import Image from "next/image";
 import qr from "../../image/qr-code.gif";
 
-export const Track = () => {
+export type Discipline = {
+  title: string;
+  exam: string;
+  test: string;
+  creditUnit: string;
+  lecture: string;
+  practice: string;
+  course: string[];
+};
+
+export type Topic = {
+  red: Discipline[];
+  green: Discipline[];
+  blue: Discipline[];
+  orange: Discipline[];
+};
+
+export const Track = ({
+  topics,
+  variant,
+}: {
+  topics: Topic;
+  variant: string;
+}) => {
   const [course, setCourse] = useState(0);
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -359,8 +381,8 @@ export const Track = () => {
                 selectedTrack === "all" || selectedTrack === "red" ? 1 : 0.2,
             }}
           />
-          {topics.topics.red.map((topic, index) => {
-            let point = {x: 0, y: 0};
+          {topics.red?.map((topic, index) => {
+            let point = { x: 0, y: 0 };
             if (index < 10) {
               point = { x: isMobile ? 100 : 170, y: 100 + index * 50 };
             } else {
@@ -416,9 +438,9 @@ export const Track = () => {
                     x={point.x - 30}
                     y={point.y + 5 + idx * 15}
                     textAnchor="end"
-                    className={`${isActive ? "font-bold text-base" : "text-sm"} ${
-                      isMobile ? "text-xs" : ""
-                    }`}
+                    className={`${
+                      isActive ? "font-bold text-base" : "text-sm"
+                    } ${isMobile ? "text-xs" : ""}`}
                   >
                     {line}
                   </text>
@@ -442,8 +464,8 @@ export const Track = () => {
                 selectedTrack === "all" || selectedTrack === "green" ? 1 : 0.2,
             }}
           />
-          {topics.topics.green.map((topic, index) => {
-            let point = {x: 0, y: 0};
+          {topics.green?.map((topic, index) => {
+            let point = { x: 0, y: 0 };
             if (index < 11) {
               point = { x: isMobile ? 170 : 300, y: 52 + index * 50 };
             } else {
@@ -464,7 +486,7 @@ export const Track = () => {
               course === 0 || topic.course.includes(course.toString());
             const isTrackVisible =
               selectedTrack === "all" || selectedTrack === "green";
-            const lines = formatText(topic)
+            const lines = formatText(topic);
             return (
               <g
                 key={index}
@@ -499,9 +521,9 @@ export const Track = () => {
                     x={point.x + 30}
                     y={point.y + 5 + idx * 15}
                     textAnchor="start"
-                    className={`${isActive ? "font-bold text-base" : "text-sm"} ${
-                      isMobile ? "text-xs" : ""
-                    }`}
+                    className={`${
+                      isActive ? "font-bold text-base" : "text-sm"
+                    } ${isMobile ? "text-xs" : ""}`}
                   >
                     {line}
                   </text>
@@ -525,10 +547,10 @@ export const Track = () => {
                 selectedTrack === "all" || selectedTrack === "blue" ? 1 : 0.2,
             }}
           />
-          {topics.topics.blue.map((topic, index) => {
-            let point = {x: 0, y: 0};
+          {topics.blue.map((topic, index) => {
+            let point = { x: 0, y: 0 };
             const maxPointsOnVertical = 11;
-            const maxPointsOnCurve = 1;
+            const maxPointsOnCurve = 2;
 
             if (index < maxPointsOnVertical) {
               point = { x: isMobile ? 630 : 1020, y: 52 + index * 60 };
@@ -617,8 +639,8 @@ export const Track = () => {
                 selectedTrack === "all" || selectedTrack === "orange" ? 1 : 0.2,
             }}
           />
-          {topics.topics.orange.map((topic, index) => {
-            let point = {x: 0, y: 0};
+          {topics.orange.map((topic, index) => {
+            let point = { x: 0, y: 0 };
             if (index < 11) {
               point = { x: isMobile ? 700 : 1150, y: 102 + index * 50 };
             } else {
@@ -642,7 +664,7 @@ export const Track = () => {
               course === 0 || topic.course.includes(course.toString());
             const isTrackVisible =
               selectedTrack === "all" || selectedTrack === "orange";
-            const lines = formatText(topic)
+            const lines = formatText(topic);
             return (
               <g
                 key={index}
@@ -707,7 +729,7 @@ export const Track = () => {
             className={`text-xl font-bold ${isMobile ? "text-base" : ""}`}
             fill="#000000"
           >
-            Образовательный трек
+            Образовательный трек {variant == "2" ? "ТВрП" : "РКБП"}
           </text>
         </svg>
       </div>
