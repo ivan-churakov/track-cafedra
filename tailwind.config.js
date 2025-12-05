@@ -4,7 +4,7 @@ const { fontFamily } = require("tailwindcss/defaultTheme");
 module.exports = {
   content: [
     "./pages/**/*.{js,ts,jsx,tsx}",
-    "./components/**/*.{js,ts,jsx,tsx}",
+    "./Components/**/*.{js,ts,jsx,tsx}",
     "./app/**/*.{js,ts,jsx,tsx}",
   ],
   safelist: ["bg-cyan-700", "bg-gray-200", "bg-gray-800", "border-orange-500", "border-green-500", "border-red-500", "border-blue-500"],
