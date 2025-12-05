@@ -48,7 +48,7 @@ export default function App({ Component, pageProps }: AppProps) {
   return <div>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div className={`w-full h-full min-h-[100vh] bg-dark text-light`}>
-      <main className={`${rubik.variable} font-sand min-h-[100vh] h-full font-sans`}>
+      <main className={`${rubik.variable} min-h-[100vh] h-full font-sans`}>
         {isLoading ? (
             <div className={"w-full h-full flex justify-center items-center"}>
               Loading...
