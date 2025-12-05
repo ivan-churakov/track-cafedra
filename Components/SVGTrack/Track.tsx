@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import qr from "../../image/qr-code.gif";
+import qrTVP from "../../image/qr-code-TVP.png";
+import qrRKBP from "../../image/qr-code-RKBP.png";
 
 export type Discipline = {
   title: string;
@@ -736,7 +737,7 @@ export const Track = ({
 
       {/* QR Code */}
       <Image
-        src={qr}
+        src={variant == "2" ? qrTVP : qrRKBP}
         width={isMobile ? 100 : 200}
         height={isMobile ? 100 : 200}
         className="absolute bottom-0 right-0 z-10"
