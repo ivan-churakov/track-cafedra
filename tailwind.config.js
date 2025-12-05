@@ -14,8 +14,8 @@ module.exports = {
         sans: ["var(--font-rubik)", ...fontFamily.sans],
       },
       colors: {
-        dark: "#0A0A0A",
-        light: "#F5F5F5",
+        // dark: "#0A0A0A",
+        // light: "#F5F5F5",
         // "red-track": "#D4D4D4",
         // "green-track": "#646464",
         // "blue-track": "#1a6bb1",
