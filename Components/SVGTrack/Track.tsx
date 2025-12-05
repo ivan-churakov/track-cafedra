@@ -162,7 +162,7 @@ export const Track = ({
     practice: string;
     course: string[];
   }) => {
-    const maxCharsPerLine = 40;
+    const maxCharsPerLine = 36;
     const words = topic.title.split(" ");
     const lines: string[] = [];
 
@@ -317,8 +317,9 @@ export const Track = ({
               <div className="w-5 h-5 rounded-full border-4 border-blue-500"></div>
             </button>
             <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 px-2 py-1 bg-gray-800 text-white text-sm rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
-              Дисциплины цикла &quot;Разработка, внедрение, сопровождение
-              ИС&quot; (профиль РКБП)
+              {variant == "2"
+                ? `Дисциплины цикла "Информационные технологии" (профиль ТВП)`
+                : `Дисциплины цикла "Разработка, внедрение, сопровождение ИС" (профиль РКБП)`}
             </div>
           </div>
 
@@ -332,8 +333,9 @@ export const Track = ({
               <div className="w-5 h-5 rounded-full border-4 border-orange-500"></div>
             </button>
             <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 px-2 py-1 bg-gray-800 text-white text-sm rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
-              Дисциплины цикла &quot;Информационные системы и технологии&quot;
-              (профиль РКБП)
+              {variant == "2"
+                ? `Дисциплины цикла "Разработка игровых решений" (профиль ТВП)`
+                : `Дисциплины цикла "Информационные системы и технологии" (профиль РКБП)`}
             </div>
           </div>
         </div>
@@ -622,8 +624,6 @@ export const Track = ({
             );
           })}
 
-
-
           {/* Оранжевая линия */}
           <path
             d={
@@ -641,7 +641,7 @@ export const Track = ({
           />
           {topics.orange.map((topic, index) => {
             let point = { x: 0, y: 0 };
-            if (index < 11) {
+            if (index < 10) {
               point = { x: isMobile ? 700 : 1150, y: 102 + index * 50 };
             } else {
               const t = (index - 10) / 2;
@@ -656,7 +656,7 @@ export const Track = ({
               } else {
                 point = {
                   x: isMobile ? 750 : 1254,
-                  y: 724 + (index - 13) * 50,
+                  y: 724 + (index - 12) * 50,
                 };
               }
             }
@@ -729,7 +729,7 @@ export const Track = ({
             className={`text-xl font-bold ${isMobile ? "text-base" : ""}`}
             fill="#000000"
           >
-            Образовательный трек {variant == "2" ? "ТВрП" : "РКБП"}
+            Образовательный трек. Профиль {variant == "2" ? "ТВП" : "РКБП"}
           </text>
         </svg>
       </div>

@@ -5,6 +5,7 @@ import cross from "../image/cross.svg";
 import trackImg from "../image/track.svg";
 import card4 from "../image/cardSoty.svg";
 import card2 from "../image/card123.svg";
+import lesenka from "../image/lesenka.svg";
 import card11 from "../image/card11.png";
 import logoKB from "../image/KBSP_white.png";
 import { Video } from "../Components/Video/Video";
@@ -69,7 +70,7 @@ export default function Home() {
             alt="cross"
           />
           <Image
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
             src={card2}
             alt="Картинка трека предметов"
           />
@@ -91,13 +92,13 @@ export default function Home() {
           />
           <Image
             className="w-full h-full object-contain"
-            src={card11}
+            src={lesenka}
             alt="Картинка трека предметов"
           />
         </div>
       </div>
       <div className="h-full flex flex-col justify-between items-center gap-10 p-4 sm:p-6">
-        <div className="grid grid-cols-3 gap-8">
+        <div className="h-full grid grid-cols-3 gap-8">
           {/* <div
             onClick={() => setShow1(true)}
             className="flex flex-col bg-white shadow-2xl rounded-xl p-4 cursor-pointer"
@@ -112,11 +113,11 @@ export default function Home() {
             />
           </div> */}
           <Link
-            href={"/track2"}
-            className="flex flex-col bg-white shadow-2xl rounded-xl p-4"
+            href={"/track"}
+            className="h-full flex flex-col bg-white shadow-2xl rounded-xl p-4"
           >
             <p className="font-medium text-center text-xl">
-              09.03.02 профиль ТВрП
+              09.03.02 профиль РКБП
             </p>
             <Image
               className="w-full h-full object-contain"
@@ -126,7 +127,7 @@ export default function Home() {
           </Link>
           <div
             onClick={() => setShow2(true)}
-            className="flex flex-col bg-white shadow-2xl rounded-xl p-4 cursor-pointer"
+            className="h-full flex flex-col bg-white shadow-2xl rounded-xl p-4 cursor-pointer"
           >
             <p className="font-medium text-center text-xl">
               Профессиональная сфера деятельности выпускника
@@ -138,11 +139,11 @@ export default function Home() {
             />
           </div>
           <Link
-            href={"/track"}
-            className="flex flex-col bg-white shadow-2xl rounded-xl p-4"
+            href={"/track2"}
+            className="h-full flex flex-col bg-white shadow-2xl rounded-xl p-4"
           >
             <p className="font-medium text-center text-xl">
-              09.03.02 профиль РКБП
+              09.03.02 профиль ТВП
             </p>
             <Image
               className="w-full h-full object-contain"
@@ -167,25 +168,25 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-8">
-          <div className="flex max-h-[367px] bg-white shadow-2xl rounded-xl p-4">
+        <div className="w-full h-full grid grid-cols-3 gap-8">
+          <div className="flex bg-white shadow-2xl rounded-xl p-4">
             <Video src={"/video.mp4"} />
           </div>
           <div
             onClick={() => setShow3(true)}
-            className="flex flex-col max-h-[367px] bg-white shadow-2xl rounded-xl p-4 cursor-pointer"
+            className="flex flex-col bg-white shadow-2xl rounded-xl p-4 cursor-pointer"
           >
-            <p className="font-medium text-center text-xl">
+            {/* <p className="font-medium text-center text-xl">
               Разработка кроссплатформенных бизнес-приложений
-            </p>
+            </p> */}
             <Image
               className="w-full h-full object-contain"
-              src={card11}
+              src={lesenka}
               alt="Картинка трека предметов"
             />
           </div>
-          <div className="flex flex-col max-h-[367px] bg-white shadow-2xl rounded-xl gap-4 p-4">
-            <Video src={"/words.mp4"} />
+          <div className="flex flex-col bg-white shadow-2xl rounded-xl gap-4 p-4">
+            <Video src={"/TVP.MP4"} />
           </div>
         </div>
       </div>
