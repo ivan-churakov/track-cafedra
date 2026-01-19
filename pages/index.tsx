@@ -224,6 +224,7 @@ export default function Home() {
             showCounter={true}
             initialIndex={presentationIndex}
           />
+          
         </div>
       </div>
     </div>
