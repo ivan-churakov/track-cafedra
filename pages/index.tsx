@@ -5,7 +5,7 @@ import cross from "../image/cross.svg";
 import trackImg from "../image/track.svg";
 import card4 from "../image/cardSoty.svg";
 import card2 from "../image/card123.svg";
-import lesenka from "../image/lesenka.svg";
+import lesenka from "../image/cardSoty.svg";
 import card11 from "../image/card11.png";
 import logoKB from "../image/KBSP_white.png";
 import { Video } from "../Components/Video/Video";
