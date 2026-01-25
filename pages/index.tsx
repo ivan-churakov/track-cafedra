@@ -2,7 +2,8 @@ import * as React from "react";
 import { useState } from "react";
 import Image from "next/image";
 import cross from "../image/cross.svg";
-import trackImg from "../image/track.svg";
+import trackTVP from "../image/trackTVP.png";
+import trackRKBP from "../image/trackRKBP.png";
 import card4 from "../image/cardSoty.svg";
 import card2 from "../image/card123.svg";
 import lesenka from "../image/cardSoty.svg";
@@ -121,7 +122,7 @@ export default function Home() {
             </p>
             <Image
               className="w-full h-full object-contain"
-              src={trackImg}
+              src={trackRKBP}
               alt="Картинка трека предметов"
             />
           </Link>
@@ -147,7 +148,7 @@ export default function Home() {
             </p>
             <Image
               className="w-full h-full object-contain"
-              src={trackImg}
+              src={trackTVP}
               alt="Картинка трека предметов"
             />
           </Link>
