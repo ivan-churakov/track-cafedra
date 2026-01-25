@@ -134,7 +134,7 @@ export default function Home() {
               alt="Картинка трека предметов"
             />
           </Link>
-          <div
+          {/* <div
             onClick={() => setShow2(true)}
             className="h-full flex flex-col bg-white shadow-2xl rounded-xl p-4 cursor-pointer"
           >
@@ -145,6 +145,18 @@ export default function Home() {
               className="w-full h-full object-contain"
               src={card2}
               alt="Профессиональная сфера деятельности выпускника"
+            />
+          </div> */}
+          <div
+            onClick={() => {
+              setPresentationIndex(0);
+              setShowPresentation(true);
+            }}
+            className="flex flex-col bg-white shadow-2xl rounded-xl p-4 cursor-pointer"
+          >
+            <PresentationSlider
+              images={presentationImages}
+              // title="Практическая деятельность кафедры"
             />
           </div>
           <Link
@@ -182,17 +194,16 @@ export default function Home() {
             <Video src={"/video.mp4"} />
           </div>
           <div
-            onClick={() => {
-              setPresentationIndex(0);
-              setShowPresentation(true);
-            }}
-            className="flex flex-col bg-white shadow-2xl rounded-xl p-4 cursor-pointer"
+            onClick={() => setShow3(true)}
+            className="h-full flex flex-col bg-white shadow-2xl rounded-xl p-4 cursor-pointer"
           >
-            <PresentationSlider
-              images={presentationImages}
-              title="Практическая деятельность кафедры"
+            <Image
+              className="w-full h-full object-contain"
+              src={lesenka}
+              alt="Картинка трека предметов"
             />
           </div>
+
           <div className="flex flex-col bg-white shadow-2xl rounded-xl gap-4 p-4">
             <Video src={"/TVP.MP4"} />
           </div>
@@ -218,13 +229,12 @@ export default function Home() {
           />
           <PresentationSlider
             images={presentationImages}
-            title="Практическая деятельность кафедры"
+            // title="Практическая деятельность кафедры"
             autoPlay={false}
             showArrows={true}
             showCounter={true}
             initialIndex={presentationIndex}
           />
-          
         </div>
       </div>
     </div>
