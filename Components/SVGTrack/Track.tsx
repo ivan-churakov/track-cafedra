@@ -201,7 +201,7 @@ export const Track = ({
   return (
     <>
       <div
-        className={`fixed z-10 flex flex-col gap-4 bg-white p-4 rounded-md ${
+        className={`fixed z-10 flex flex-col gap-4 p-4 rounded-md ${
           isMobile ? "w-full" : ""
         }`}
       >
