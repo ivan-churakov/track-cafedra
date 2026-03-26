@@ -18,13 +18,21 @@ export const Header = ({ isOpen, setIsOpen }: Props) => {
         <div className="w-full">
           <Link href="/" className="flex items-end flex-col cursor-pointer">
             <span className="text-2xl">
-              Профиль “Разработка кроссплатформенных бизнес-приложений”
+              Профиль &laquo;Разработка кроссплатформенных бизнес-приложений&raquo;
             </span>
             <span className="">
-              09.03.02 “Информационные системы и технологии”
+              09.03.02 &laquo;Информационные системы и технологии&raquo;
             </span>
           </Link>
         </div>
+        <nav className="flex items-center gap-4 flex-shrink-0">
+          <Link
+            href="/teachers"
+            className="text-sm text-gray-300 hover:text-white transition-colors whitespace-nowrap"
+          >
+            Преподаватели
+          </Link>
+        </nav>
       </header>
     </div>
   );

@@ -157,11 +157,11 @@ export const Track = ({
       topicPosition.current = projectToLine(rawPos.x, rawPos.y, linePoints);
 
       setTopics((prev) => {
-        const updated: typeof prev = {};
-        Object.keys(prev).forEach((branch) => {
-          updated[branch] = prev[branch].map((t) =>
+        const updated = { ...prev } as typeof prev;
+        (Object.keys(prev) as Array<keyof typeof prev>).forEach((branch) => {
+          updated[branch] = prev[branch].map((t: any) =>
             t.id === topic.id ? { ...t, position: topicPosition.current } : t
-          );
+          ) as any;
         });
         return updated;
       });
@@ -173,11 +173,11 @@ export const Track = ({
       window.removeEventListener("mouseup", onUp);
 
       setTopics((prev) => {
-        const updated: typeof prev = {};
-        Object.keys(prev).forEach((branch) => {
-          updated[branch] = prev[branch].map((t) =>
+        const updated = { ...prev } as typeof prev;
+        (Object.keys(prev) as Array<keyof typeof prev>).forEach((branch) => {
+          updated[branch] = prev[branch].map((t: any) =>
             t.id === topic.id ? { ...t, position: topicPosition.current } : t
-          );
+          ) as any;
         });
         return updated;
       });
