@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏓 Pong - Классическая Игра</title>
+    <link rel="stylesheet" href="pong-game.css">
+</head>
+<body>
+    <div class="game-container">
+        <header class="game-header">
+            <h1>🏓 Pong</h1>
+            <div class="score-board">
+                <div class="score">
+                    <div class="player-label">Игрок</div>
+                    <div id="playerScore" class="score-value">0</div>
+                </div>
+                <div class="score-divider">:</div>
+                <div class="score">
+                    <div class="player-label">Игрок 2</div>
+                    <div id="player2Score" class="score-value">0</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="game-area">
+            <canvas id="pongCanvas" width="800" height="500"></canvas>
+            
+            <div id="startScreen" class="overlay active">
+                <div class="start-box">
+                    <h2>🏓 Pong</h2>
+                    <p class="instructions">
+                        <strong>Игрок 1 (слева):</strong> Управляйте мышью/сенсором в левой половине экрана<br>
+                        <strong>Игрок 2 (справа):</strong> Управляйте мышью/сенсором в правой половине экрана
+                    </p>
+                    <p class="instructions-small">
+                        Цель: отбивайте мяч и набирайте очки. Первый до 11 очков побеждает!<br>
+                        Скорость мяча будет увеличиваться каждые 5 секунд!
+                    </p>
+                    <button id="startBtn" class="btn-start">Начать игру</button>
+                </div>
+            </div>
+
+            <div id="pauseScreen" class="overlay">
+                <div class="pause-box">
+                    <h2>⏸ Пауза</h2>
+                    <button id="resumeBtn" class="btn-start">Продолжить</button>
+                    <button id="restartBtn" class="btn-start">Заново</button>
+                </div>
+            </div>
+
+            <div id="gameOverScreen" class="overlay">
+                <div class="gameover-box">
+                    <h2 id="winnerText">🎉 Победа!</h2>
+                    <div class="final-score">
+                        <span id="finalPlayerScore">0</span> : <span id="finalComputerScore">0</span>
+                    </div>
+                    <button id="playAgainBtn" class="btn-start">Играть снова</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-controls">
+            <div class="control-info">
+                <p>🖱️ <strong>Игрок 1:</strong> Левая половина экрана | <strong>Игрок 2:</strong> Правая половина экрана</p>
+                <p>Перемещайте курсор/палец вверх и вниз для управления ракеткой</p>
+            </div>
+            <button id="pauseBtn" class="btn-control">⏸ Пауза</button>
+        </div>
+        
+        <!-- Виртуальные кнопки управления (опционально для мобильных) -->
+        <div class="virtual-controls pong-controls" style="display: none;">
+            <div class="control-group">
+                <div class="control-row">
+                    <button class="virtual-btn arrow" data-key="ArrowUp">↑</button>
+                </div>
+                <div class="control-row">
+                    <button class="virtual-btn arrow" data-key="ArrowDown">↓</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <link rel="stylesheet" href="virtual-controls.css">
+    <script src="virtual-controls.js"></script>
+    <script src="pong-game.js"></script>
+</body>
+</html>
+

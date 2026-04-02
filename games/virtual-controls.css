@@ -1,0 +1,90 @@
+/* Виртуальные кнопки управления для игр */
+
+.virtual-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.control-row {
+    display: flex;
+    gap: 5px;
+}
+
+.virtual-btn {
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    cursor: pointer;
+    transition: all 0.1s;
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.virtual-btn:active {
+    background: rgba(255, 255, 255, 0.4);
+    transform: scale(0.95);
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+.virtual-btn.arrow {
+    font-size: 28px;
+    color: #fff;
+}
+
+.virtual-btn.action {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: rgba(255, 255, 255, 0.5);
+    font-size: 20px;
+    font-weight: bold;
+}
+
+/* Специальные стили для разных игр */
+.tetris-controls .virtual-btn {
+    width: 70px;
+    height: 70px;
+}
+
+.snake-controls .virtual-btn {
+    width: 65px;
+    height: 65px;
+}
+
+.breakout-controls .virtual-btn {
+    width: 80px;
+    height: 50px;
+}
+
+.space-invaders-controls .virtual-btn {
+    width: 70px;
+    height: 70px;
+}
+
+.pong-controls {
+    display: none; /* Pong управляется мышью/сенсором */
+}
+
+/* Кнопки всегда видны на всех устройствах */
+.virtual-controls {
+    display: flex !important;
+}
+

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>👾 Space Invaders</title>
+    <link rel="stylesheet" href="space-invaders-game.css">
+</head>
+<body>
+    <div class="game-wrapper">
+        <div class="game-header">
+            <h1>👾 Space Invaders</h1>
+            <div class="score-panel">
+                <div>Очки: <span id="score">0</span></div>
+                <div>Жизни: <span id="lives">3</span></div>
+            </div>
+        </div>
+        <canvas id="gameCanvas" width="600" height="500"></canvas>
+        <div class="controls">
+            <p>Управление: Стрелки ← → для движения, Пробел для стрельбы</p>
+            <button id="startBtn" class="btn">Начать</button>
+            <a href="games-menu.html" class="back-link">← Вернуться</a>
+        </div>
+        
+        <!-- Виртуальные кнопки управления -->
+        <div class="virtual-controls space-invaders-controls">
+            <div class="control-group">
+                <div class="control-row">
+                    <button class="virtual-btn arrow" data-key="ArrowLeft">←</button>
+                    <button class="virtual-btn action" data-key=" ">⚡</button>
+                    <button class="virtual-btn arrow" data-key="ArrowRight">→</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <link rel="stylesheet" href="virtual-controls.css">
+    <script src="virtual-controls.js"></script>
+    <script src="space-invaders-game.js"></script>
+</body>
+</html>
+

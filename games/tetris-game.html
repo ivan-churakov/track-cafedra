@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧩 Тетрис</title>
+    <link rel="stylesheet" href="tetris-game.css">
+</head>
+<body>
+    <div class="game-wrapper">
+        <div class="game-container">
+            <div class="game-info">
+                <h1>🧩 Тетрис</h1>
+                <div class="score-panel">
+                    <div class="score-item">
+                        <span>Очки:</span>
+                        <span id="score">0</span>
+                    </div>
+                    <div class="score-item">
+                        <span>Линии:</span>
+                        <span id="lines">0</span>
+                    </div>
+                    <div class="score-item">
+                        <span>Уровень:</span>
+                        <span id="level">1</span>
+                    </div>
+                </div>
+                <div class="next-piece">
+                    <div>Следующая:</div>
+                    <canvas id="nextCanvas" width="80" height="80"></canvas>
+                </div>
+                <button id="pauseBtn" class="btn">Пауза</button>
+                <button id="restartBtn" class="btn">Заново</button>
+            </div>
+            <canvas id="gameCanvas" width="300" height="600"></canvas>
+        </div>
+        <div class="controls-info">
+            <p><strong>Управление:</strong> Стрелки ← → для движения, ↑ для поворота, ↓ для ускорения</p>
+            <a href="games-menu.html" class="back-link">← Вернуться к играм</a>
+        </div>
+        
+        <!-- Виртуальные кнопки управления -->
+        <div class="virtual-controls tetris-controls">
+            <div class="control-group">
+                <div class="control-row">
+                    <button class="virtual-btn arrow" data-key="ArrowLeft">←</button>
+                </div>
+                <div class="control-row">
+                    <button class="virtual-btn arrow" data-key="ArrowUp">↑</button>
+                    <button class="virtual-btn arrow" data-key="ArrowDown">↓</button>
+                </div>
+                <div class="control-row">
+                    <button class="virtual-btn arrow" data-key="ArrowRight">→</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <link rel="stylesheet" href="virtual-controls.css">
+    <script src="virtual-controls.js"></script>
+    <script src="tetris-game.js"></script>
+</body>
+</html>
+

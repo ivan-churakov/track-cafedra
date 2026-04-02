@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐍 Змейка</title>
+    <link rel="stylesheet" href="snake-game.css">
+</head>
+<body>
+    <div class="game-wrapper">
+        <div class="game-header">
+            <h1>🐍 Змейка</h1>
+            <div class="score-panel">
+                <div>Очки: <span id="score">0</span></div>
+                <div>Рекорд: <span id="highScore">0</span></div>
+            </div>
+        </div>
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+        <div class="controls">
+            <button id="startBtn" class="btn">Начать</button>
+            <button id="pauseBtn" class="btn">Пауза</button>
+            <a href="games-menu.html" class="back-link">← Вернуться</a>
+        </div>
+        <p class="instructions">Управление: Стрелки или WASD</p>
+        
+        <!-- Виртуальные кнопки управления -->
+        <div class="virtual-controls snake-controls">
+            <div class="control-group">
+                <div class="control-row">
+                    <button class="virtual-btn arrow" data-key="ArrowUp">↑</button>
+                </div>
+                <div class="control-row">
+                    <button class="virtual-btn arrow" data-key="ArrowLeft">←</button>
+                    <button class="virtual-btn arrow" data-key="ArrowDown">↓</button>
+                    <button class="virtual-btn arrow" data-key="ArrowRight">→</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <link rel="stylesheet" href="virtual-controls.css">
+    <script src="virtual-controls.js"></script>
+    <script src="snake-game.js"></script>
+</body>
+</html>
+

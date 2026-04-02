@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>👻 3D Хоррор Игра</title>
+    <link rel="stylesheet" href="horror-game.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+    <div class="game-wrapper">
+        <div class="game-container">
+            <div class="game-header">
+                <h1>👻 Темный Коридор</h1>
+                <div class="game-stats">
+                    <div class="stat-item">
+                        <span>Ключи:</span>
+                        <span id="keys">0/3</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Время:</span>
+                        <span id="time">00:00</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Дистанция:</span>
+                        <span id="distance">---</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-area" id="gameArea">
+                <div id="gameContainer"></div>
+                <div class="crosshair"></div>
+                <div class="vignette"></div>
+            </div>
+
+            <div class="game-controls">
+                <div class="controls-info">
+                    <p><strong>Управление:</strong> WASD - движение, мышь - обзор, Shift - бег, F - фонарик</p>
+                    <p>Соберите 3 ключа и найдите выход, пока монстр не настиг вас!</p>
+                </div>
+                <button id="startBtn" class="btn-start">Начать игру</button>
+                <button id="pauseBtn" class="btn-pause" style="display: none;">Пауза</button>
+            </div>
+
+            <div class="game-overlay" id="gameOverlay">
+                <div class="overlay-content">
+                    <h2 id="overlayTitle">Темный Коридор</h2>
+                    <p id="overlayText">Вы заблудились в темном коридоре. Соберите 3 ключа и найдите выход, пока монстр не настиг вас!</p>
+                    <button id="overlayBtn" class="btn-overlay">Начать</button>
+                </div>
+            </div>
+
+            <div class="back-link">
+                <a href="games-menu.html">← Вернуться к играм</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="horror-game.js"></script>
+</body>
+</html>
