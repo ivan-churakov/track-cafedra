@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 Многопользовательская Аркада</title>
+    <link rel="stylesheet" href="multiplayer-game.css">
+</head>
+<body>
+    <div class="game-wrapper">
+        <header class="game-header">
+            <h1>🎮 Многопользовательская Аркада</h1>
+            <div class="game-stats">
+                <div class="stat">
+                    <span>Игроков: </span>
+                    <span id="playersCount">1</span>
+                </div>
+                <div class="stat">
+                    <span>Время: </span>
+                    <span id="gameTime">0</span>с
+                </div>
+            </div>
+        </header>
+
+        <!-- Экран подключения -->
+        <div id="connectScreen" class="screen active">
+            <div class="connect-box">
+                <h2>Подключиться к игре</h2>
+                <input type="text" id="playerName" placeholder="Введите ваше имя" maxlength="15">
+                <button id="connectBtn" class="btn-primary">Начать игру</button>
+                <div id="connectStatus" class="status"></div>
+            </div>
+        </div>
+
+        <!-- Игровой экран -->
+        <div id="gameScreen" class="screen">
+            <div class="game-info-bar">
+                <div class="player-info" id="player1Info">
+                    <div class="player-name">Игрок 1</div>
+                    <div class="player-score">Очки: <span id="player1Score">0</span></div>
+                    <div class="player-controls">WASD</div>
+                </div>
+                <div class="player-info" id="player2Info" style="display: none;">
+                    <div class="player-name">Игрок 2</div>
+                    <div class="player-score">Очки: <span id="player2Score">0</span></div>
+                    <div class="player-controls">Стрелки</div>
+                </div>
+            </div>
+            
+            <canvas id="gameCanvas" width="1000" height="600"></canvas>
+            
+            <div class="game-controls">
+                <div class="controls-info">
+                    <h3>Управление:</h3>
+                    <div class="controls-grid">
+                        <div class="control-item">
+                            <strong>Игрок 1:</strong> WASD для движения
+                        </div>
+                        <div class="control-item">
+                            <strong>Игрок 2:</strong> Стрелки для движения
+                        </div>
+                    </div>
+                    <p class="game-hint">Собирайте звёзды ⭐ для очков! Избегайте препятствий!</p>
+                </div>
+                <button id="restartBtn" class="btn-secondary">Перезапустить</button>
+            </div>
+        </div>
+
+        <!-- Экран результатов -->
+        <div id="resultsScreen" class="screen">
+            <div class="results-box">
+                <h2>🏆 Результаты игры</h2>
+                <div id="resultsList" class="results-list"></div>
+                <button id="playAgainBtn" class="btn-primary">Играть снова</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="multiplayer-game.js"></script>
+</body>
+</html>
+
+

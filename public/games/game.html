@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎨 Рисуй и Угадывай - Многопользовательская Игра</title>
+    <link rel="stylesheet" href="game.css">
+</head>
+<body>
+    <div class="game-container">
+        <header class="game-header">
+            <h1>🎨 Рисуй и Угадывай</h1>
+            <div class="game-info">
+                <div class="players-count">
+                    <span>👥 Игроков: </span>
+                    <span id="playersCount">1</span>
+                </div>
+                <div class="round-info">
+                    <span>Раунд: </span>
+                    <span id="roundNumber">1</span>
+                </div>
+                <div class="score-info">
+                    <span>Очки: </span>
+                    <span id="playerScore">0</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="game-content">
+            <!-- Экран подключения -->
+            <div id="connectScreen" class="screen active">
+                <div class="connect-box">
+                    <h2>Подключиться к игре</h2>
+                    <input type="text" id="playerName" placeholder="Введите ваше имя" maxlength="20">
+                    <button id="connectBtn" class="btn-game">Подключиться</button>
+                    <div id="connectStatus" class="status-message"></div>
+                </div>
+            </div>
+
+            <!-- Экран ожидания -->
+            <div id="waitingScreen" class="screen">
+                <div class="waiting-box">
+                    <h2>Ожидание игроков...</h2>
+                    <div class="spinner"></div>
+                    <div id="playersList" class="players-list"></div>
+                    <button id="startGameBtn" class="btn-game" style="display: none;">Начать игру</button>
+                </div>
+            </div>
+
+            <!-- Экран рисования -->
+            <div id="drawingScreen" class="screen">
+                <div class="drawing-container">
+                    <div class="word-display">
+                        <h3>Ваше слово для рисования:</h3>
+                        <div id="wordToDraw" class="word-box"></div>
+                        <p class="hint">Нарисуйте это слово!</p>
+                    </div>
+                    <div class="canvas-container">
+                        <canvas id="drawingCanvas" width="800" height="600"></canvas>
+                        <div class="canvas-controls">
+                            <button id="clearBtn" class="btn-control">Очистить</button>
+                            <input type="color" id="colorPicker" value="#000000">
+                            <input type="range" id="brushSize" min="2" max="20" value="5">
+                            <span>Размер: <span id="brushSizeValue">5</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Экран угадывания -->
+            <div id="guessingScreen" class="screen">
+                <div class="guessing-container">
+                    <div class="drawing-display">
+                        <h3>Что рисует <span id="drawerName"></span>?</h3>
+                        <canvas id="otherPlayerCanvas" width="800" height="600"></canvas>
+                    </div>
+                    <div class="guess-input">
+                        <input type="text" id="guessInput" placeholder="Введите ваш ответ..." maxlength="50">
+                        <button id="submitGuess" class="btn-game">Отправить</button>
+                    </div>
+                    <div id="guessesList" class="guesses-list"></div>
+                </div>
+            </div>
+
+            <!-- Экран результатов -->
+            <div id="resultsScreen" class="screen">
+                <div class="results-container">
+                    <h2>Результаты раунда</h2>
+                    <div id="resultsList" class="results-list"></div>
+                    <div id="leaderboard" class="leaderboard">
+                        <h3>🏆 Таблица лидеров</h3>
+                        <div id="leaderboardList"></div>
+                    </div>
+                    <button id="nextRoundBtn" class="btn-game">Следующий раунд</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="gameMessages" class="game-messages"></div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
+

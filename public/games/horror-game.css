@@ -1,0 +1,321 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: #000;
+    color: #fff;
+    overflow: hidden;
+    user-select: none;
+    cursor: none;
+}
+
+.game-wrapper {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(circle, #0a0a0a 0%, #000 100%);
+    position: relative;
+}
+
+.game-container {
+    width: 100%;
+    max-width: 1200px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    position: relative;
+}
+
+.game-header {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 20px;
+    z-index: 10;
+}
+
+.game-header h1 {
+    font-size: 2.5em;
+    color: #ff0000;
+    text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000;
+    margin-bottom: 15px;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+        text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000;
+    }
+    50% {
+        opacity: 0.7;
+        text-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000;
+    }
+}
+
+.game-stats {
+    display: flex;
+    justify-content: space-around;
+    gap: 20px;
+    flex-wrap: wrap;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 15px;
+    border-radius: 10px;
+    border: 2px solid #ff0000;
+}
+
+.stat-item {
+    font-size: 1.1em;
+    color: #fff;
+    text-shadow: 0 0 10px #fff;
+}
+
+.stat-item span:last-child {
+    color: #ff6b6b;
+    font-weight: bold;
+    margin-left: 5px;
+}
+
+.game-area {
+    position: relative;
+    width: 100%;
+    max-width: 1000px;
+    max-height: 700px;
+    border: 3px solid #ff0000;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 0 30px rgba(255, 0, 0, 0.5), inset 0 0 50px rgba(0, 0, 0, 0.9);
+    background: #000;
+}
+
+#gameContainer {
+    width: 100%;
+    height: 100%;
+    min-height: 500px;
+}
+
+.crosshair {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 4px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    z-index: 100;
+    pointer-events: none;
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+}
+
+.crosshair::before,
+.crosshair::after {
+    content: '';
+    position: absolute;
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.crosshair::before {
+    width: 15px;
+    height: 2px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.crosshair::after {
+    width: 2px;
+    height: 15px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.vignette {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 50;
+    background: radial-gradient(circle at center, transparent 0%, transparent 40%, rgba(0, 0, 0, 0.6) 100%);
+}
+
+.game-controls {
+    width: 100%;
+    max-width: 1000px;
+    margin-top: 20px;
+    text-align: center;
+}
+
+.controls-info {
+    background: rgba(0, 0, 0, 0.8);
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #333;
+}
+
+.controls-info p {
+    margin: 5px 0;
+    color: #ccc;
+    font-size: 0.9em;
+}
+
+.btn-start, .btn-pause {
+    padding: 15px 30px;
+    font-size: 1.2em;
+    font-weight: bold;
+    background: linear-gradient(135deg, #ff0000 0%, #8b0000 100%);
+    color: #fff;
+    border: 2px solid #ff6b6b;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-transform: uppercase;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+}
+
+.btn-start:hover, .btn-pause:hover {
+    background: linear-gradient(135deg, #ff3333 0%, #ff0000 100%);
+    box-shadow: 0 0 30px rgba(255, 0, 0, 0.8);
+    transform: scale(1.05);
+}
+
+.btn-start:active, .btn-pause:active {
+    transform: scale(0.95);
+}
+
+.game-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+}
+
+.game-overlay.hidden {
+    display: none;
+}
+
+.overlay-content {
+    text-align: center;
+    padding: 40px;
+    background: linear-gradient(135deg, #1a1a2e 0%, #000 100%);
+    border: 3px solid #ff0000;
+    border-radius: 20px;
+    box-shadow: 0 0 50px rgba(255, 0, 0, 0.5);
+    max-width: 500px;
+    animation: fadeIn 0.5s;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.overlay-content h2 {
+    font-size: 2.5em;
+    color: #ff0000;
+    text-shadow: 0 0 20px #ff0000;
+    margin-bottom: 20px;
+}
+
+.overlay-content p {
+    font-size: 1.2em;
+    color: #ccc;
+    line-height: 1.6;
+    margin-bottom: 30px;
+}
+
+.btn-overlay {
+    padding: 15px 40px;
+    font-size: 1.3em;
+    font-weight: bold;
+    background: linear-gradient(135deg, #ff0000 0%, #8b0000 100%);
+    color: #fff;
+    border: 2px solid #ff6b6b;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-transform: uppercase;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+}
+
+.btn-overlay:hover {
+    background: linear-gradient(135deg, #ff3333 0%, #ff0000 100%);
+    box-shadow: 0 0 30px rgba(255, 0, 0, 0.8);
+    transform: scale(1.05);
+}
+
+.back-link {
+    margin-top: 20px;
+}
+
+.back-link a {
+    color: #ff6b6b;
+    text-decoration: none;
+    font-size: 1.1em;
+    transition: color 0.3s;
+    padding: 10px 20px;
+    border: 1px solid #ff6b6b;
+    border-radius: 5px;
+    display: inline-block;
+}
+
+.back-link a:hover {
+    color: #ff0000;
+    border-color: #ff0000;
+    background: rgba(255, 0, 0, 0.1);
+}
+
+/* Эффект дрожания при страхе */
+.shake {
+    animation: shake 0.5s;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+    20%, 40%, 60%, 80% { transform: translateX(2px); }
+}
+
+@media (max-width: 768px) {
+    .game-header h1 {
+        font-size: 1.8em;
+    }
+    
+    .game-stats {
+        font-size: 0.9em;
+        padding: 10px;
+    }
+    
+    .stat-item {
+        font-size: 0.9em;
+    }
+    
+    .controls-info p {
+        font-size: 0.8em;
+    }
+}

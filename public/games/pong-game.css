@@ -1,0 +1,249 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    color: #fff;
+    overflow: auto;
+    margin: 0;
+}
+
+.game-container {
+    width: 100%;
+    max-width: 900px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+.game-header {
+    margin-bottom: 15px;
+    width: 100%;
+    flex-shrink: 0;
+}
+
+.game-header h1 {
+    font-size: clamp(1.5em, 4vw, 3em);
+    margin-bottom: 10px;
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+    animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+    from {
+        text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+    }
+    to {
+        text-shadow: 0 0 30px rgba(255, 255, 255, 0.8), 0 0 40px rgba(102, 126, 234, 0.5);
+    }
+}
+
+.score-board {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    font-size: clamp(1em, 2vw, 1.5em);
+    flex-wrap: wrap;
+}
+
+.score {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 15px 30px;
+    border-radius: 15px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    min-width: 150px;
+}
+
+.player-label {
+    font-size: 0.7em;
+    opacity: 0.8;
+    margin-bottom: 5px;
+}
+
+.score-value {
+    font-size: 2em;
+    font-weight: bold;
+    color: #ffd700;
+}
+
+.score-divider {
+    font-size: 2em;
+    font-weight: bold;
+}
+
+.game-area {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    box-shadow: 0 0 50px rgba(102, 126, 234, 0.5);
+    overflow: hidden;
+    width: fit-content;
+    max-width: 100%;
+    flex-shrink: 0;
+}
+
+#pongCanvas {
+    display: block;
+    background: #000;
+    cursor: none;
+    max-width: 100%;
+    height: auto;
+}
+
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+}
+
+.overlay.active {
+    display: flex;
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.start-box, .pause-box, .gameover-box {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    padding: 40px;
+    border-radius: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    text-align: center;
+    max-width: 400px;
+}
+
+.start-box h2, .pause-box h2, .gameover-box h2 {
+    font-size: 2.5em;
+    margin-bottom: 20px;
+}
+
+.instructions {
+    font-size: 1.1em;
+    margin: 20px 0;
+    line-height: 1.6;
+}
+
+.instructions-small {
+    font-size: 0.9em;
+    opacity: 0.8;
+    margin: 10px 0;
+}
+
+.btn-start, .btn-control {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 15px 40px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin: 10px;
+    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+}
+
+.btn-start:hover, .btn-control:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(102, 126, 234, 0.5);
+}
+
+.btn-start:active, .btn-control:active {
+    transform: translateY(0);
+}
+
+.final-score {
+    font-size: 3em;
+    font-weight: bold;
+    margin: 20px 0;
+    color: #ffd700;
+}
+
+.game-controls {
+    margin-top: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    width: 100%;
+    flex-shrink: 0;
+}
+
+.control-info {
+    flex: 1;
+    text-align: left;
+}
+
+.control-info p {
+    margin: 5px 0;
+    font-size: 0.9em;
+    opacity: 0.9;
+}
+
+.btn-control {
+    padding: 10px 20px;
+    font-size: 14px;
+}
+
+/* Адаптивность */
+@media (max-width: 900px) {
+    #pongCanvas {
+        width: 100%;
+        height: auto;
+    }
+    
+    .game-area {
+        width: 100%;
+    }
+    
+    .score-board {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .score {
+        min-width: 120px;
+    }
+}
+
+/* Скрытие курсора на canvas */
+#pongCanvas {
+    cursor: none;
+}
+

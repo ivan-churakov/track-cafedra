@@ -107,11 +107,12 @@ export default function Home() {
           />
         </div>
       </div>
-      <div className="h-full flex flex-col justify-between items-center gap-10 p-4 sm:p-6">
-        <div className="h-full grid grid-cols-3 gap-8">
+      <div className="h-full flex flex-col gap-10 p-4 sm:p-6">
+        <div className="flex-1 w-full overflow-x-auto pb-2">
+        <div className="flex h-full gap-8">
           {/* <div
             onClick={() => setShow1(true)}
-            className="flex flex-col bg-white shadow-2xl rounded-xl p-4 cursor-pointer"
+            className="flex-shrink-0 w-1/3 flex flex-col bg-white shadow-2xl rounded-xl p-4 cursor-pointer"
           >
             <p className="font-medium text-center text-xl">
               Практическая деятельность кафедры
@@ -124,7 +125,7 @@ export default function Home() {
           </div> */}
           <Link
             href={"/track"}
-            className="h-full flex flex-col bg-white shadow-2xl rounded-xl p-4"
+            className="flex-shrink-0 w-1/3 flex flex-col bg-white shadow-2xl rounded-xl p-4"
           >
             <p className="font-medium text-center text-xl">
               09.03.02 профиль РКБП
@@ -137,7 +138,7 @@ export default function Home() {
           </Link>
           {/* <div
             onClick={() => setShow2(true)}
-            className="h-full flex flex-col bg-white shadow-2xl rounded-xl p-4 cursor-pointer"
+            className="flex-shrink-0 w-1/3 flex flex-col bg-white shadow-2xl rounded-xl p-4 cursor-pointer"
           >
             <p className="font-medium text-center text-xl">
               Профессиональная сфера деятельности выпускника
@@ -153,7 +154,7 @@ export default function Home() {
               setPresentationIndex(0);
               setShowPresentation(true);
             }}
-            className="flex flex-col bg-white shadow-2xl rounded-xl p-4 cursor-pointer"
+            className="flex-shrink-0 w-1/3 flex flex-col bg-white shadow-2xl rounded-xl p-4 cursor-pointer"
           >
             <PresentationSlider
               images={presentationImages}
@@ -162,7 +163,7 @@ export default function Home() {
           </div>
           <Link
             href={"/track2"}
-            className="h-full flex flex-col bg-white shadow-2xl rounded-xl p-4"
+            className="flex-shrink-0 w-1/3 flex flex-col bg-white shadow-2xl rounded-xl p-4"
           >
             <p className="font-medium text-center text-xl">
               09.03.02 профиль ТВП
@@ -173,8 +174,19 @@ export default function Home() {
               alt="Картинка трека предметов"
             />
           </Link>
+          <Link
+            href={"/games/games-menu.html"}
+            className="flex-shrink-0 w-1/3 flex flex-col items-center justify-center bg-white shadow-2xl rounded-xl p-4 gap-4"
+          >
+            <p className="font-medium text-center text-xl">Игры</p>
+            <div className="text-[80px] leading-none">🎮</div>
+            <p className="text-center text-gray-500 text-sm">
+              Тетрис, Змейка, Breakout, Space Invaders и другие
+            </p>
+          </Link>
         </div>
-        <div className="flex items-center gap-4">
+        </div>
+        <div className="shrink-0 flex items-center gap-4">
           <Image
             className="w-[200px] object-contain brightness-[10000]"
             src={logoKB}
@@ -190,7 +202,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="w-full h-full grid grid-cols-3 gap-8">
+        <div className="flex-1 w-full grid grid-cols-3 gap-8">
           <div className="flex bg-white shadow-2xl rounded-xl p-4">
             <Video src={"/video.mp4"} />
           </div>
