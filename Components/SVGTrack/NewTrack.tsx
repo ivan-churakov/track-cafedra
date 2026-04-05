@@ -843,7 +843,7 @@ export const Track = ({
           <p className="text-sm mb-2">{hoveredTopic.description}</p>
           <div className="flex flex-col gap-2 text-sm text-gray-600">
             {hoveredTopic.exam && <span>Экзамен: {hoveredTopic.exam}</span>}
-            {hoveredTopic.test && <span>Тест: {hoveredTopic.test}</span>}
+            {hoveredTopic.test && <span>Зачет: {hoveredTopic.test}</span>}
             {hoveredTopic.creditUnit && (
               <span>Зачетные единицы: {hoveredTopic.creditUnit}</span>
             )}

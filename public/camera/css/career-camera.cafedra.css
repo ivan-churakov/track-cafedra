@@ -1,0 +1,255 @@
+.cafedra-section {
+    margin-top: 40px;
+}
+
+.cafedra-card {
+    background: var(--primary-strong);
+    border-radius: 4px;
+    padding: 30px;
+    color: white;
+    border: 2px solid var(--primary);
+}
+
+.cafedra-card h3 {
+    font-size: 2em;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.cafedra-intro {
+    font-size: 1.1em;
+    text-align: center;
+    margin-bottom: 25px;
+    opacity: 0.95;
+}
+
+.topics-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.topic-card {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    padding: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: border-color 0.2s;
+}
+
+.topic-card:hover {
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.topic-title {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #fff;
+}
+
+.topic-meta {
+    font-size: 0.95em;
+    opacity: 0.95;
+    margin-bottom: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5em;
+}
+
+.topic-section {
+    margin-bottom: 12px;
+}
+
+.topic-section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.85em;
+    letter-spacing: 0.5px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 8px;
+}
+
+.topic-section-line {
+    flex: 1;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.35);
+}
+
+.topic-section-text {
+    flex-shrink: 0;
+}
+
+.topic-load {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 0.9em;
+}
+
+.topic-legend-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 20px;
+}
+
+.topic-legend-total {
+    margin-left: auto;
+    font-size: 0.9em;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 500;
+}
+
+.topic-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+}
+
+.topic-legend-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+}
+
+.topic-legend-item.topic-legend-lecture .topic-legend-swatch {
+    background: var(--accent);
+}
+
+.topic-legend-item.topic-legend-lecture {
+    color: var(--accent);
+}
+
+.topic-legend-item.topic-legend-practice .topic-legend-swatch {
+    background: #ecc94b;
+}
+
+.topic-legend-item.topic-legend-practice {
+    color: #ecc94b;
+}
+
+.topic-load-bar {
+    display: flex;
+    width: 100%;
+    min-height: 24px;
+    border-radius: 6px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.topic-load-seg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    padding: 0 6px;
+    font-size: 0.85em;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.7);
+    transition: width 0.3s;
+}
+
+.topic-load-lecture {
+    background: var(--accent);
+}
+
+.topic-load-practice {
+    background: #ecc94b;
+}
+
+.topic-attest {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.topic-attest-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.95em;
+}
+
+.topic-attest-type {
+    color: var(--accent);
+}
+
+.topic-attest-term {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.profile-info {
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.profile-badge {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 4px;
+    padding: 15px 25px;
+    font-size: 1.1em;
+    color: #fff;
+    font-weight: 600;
+}
+
+.cafedra-info {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+    padding: 25px;
+    margin-top: 25px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.cafedra-info h4 {
+    font-size: 1.5em;
+    margin-bottom: 15px;
+    text-align: center;
+    color: #fff;
+}
+
+.cafedra-benefits {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0;
+}
+
+.cafedra-benefits li {
+    padding: 12px 0;
+    font-size: 1.05em;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.cafedra-benefits li:last-child {
+    border-bottom: none;
+}
+
+.cafedra-cta {
+    text-align: center;
+    font-size: 1.2em;
+    margin-top: 20px;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+@media (max-width: 768px) {
+    .topics-list {
+        grid-template-columns: 1fr;
+    }
+
+    .cafedra-card {
+        padding: 20px;
+    }
+
+    .cafedra-card h3 {
+        font-size: 1.5em;
+    }
+}
+

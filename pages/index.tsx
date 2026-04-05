@@ -175,13 +175,13 @@ export default function Home() {
             />
           </Link>
           <Link
-            href={"/games/games-menu.html"}
+            href={"/camera"}
             className="flex-shrink-0 w-1/3 flex flex-col items-center justify-center bg-white shadow-2xl rounded-xl p-4 gap-4"
           >
-            <p className="font-medium text-center text-xl">Игры</p>
-            <div className="text-[80px] leading-none">🎮</div>
+            <p className="font-medium text-center text-xl">Определение профессии</p>
+            <div className="text-[80px] leading-none">📷</div>
             <p className="text-center text-gray-500 text-sm">
-              Тетрис, Змейка, Breakout, Space Invaders и другие
+              Камера анализирует вас и определяет подходящую профессию
             </p>
           </Link>
         </div>

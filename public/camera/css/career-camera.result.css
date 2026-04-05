@@ -1,0 +1,167 @@
+.result-section {
+    margin-top: 30px;
+    animation: slideUp 0.5s ease-out;
+}
+
+.result-section h2 {
+    text-align: center;
+    color: var(--primary-strong);
+    margin-bottom: 20px;
+}
+
+.profession-card {
+    background: #f7fafc;
+    border-radius: 4px;
+    padding: 30px;
+    text-align: center;
+    margin-bottom: 20px;
+    border: 2px solid var(--border);
+}
+
+.profession-icon {
+    font-size: 5em;
+    margin-bottom: 15px;
+    animation: bounce 2s ease-in-out infinite;
+}
+
+.profession-card h3 {
+    font-size: 2em;
+    color: var(--primary-strong);
+    margin-bottom: 15px;
+}
+
+.profession-description {
+    font-size: 1.1em;
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.profession-skills {
+    text-align: left;
+    background: #fff;
+    padding: 20px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    margin-bottom: 15px;
+}
+
+.profession-skills h4 {
+    color: #667eea;
+    margin-bottom: 10px;
+}
+
+.profession-skills ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.profession-skills li {
+    padding: 8px 0;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+}
+
+.profession-skills li:last-child {
+    border-bottom: none;
+}
+
+.profession-skills li::before {
+    content: "✓ ";
+    color: var(--primary);
+    font-weight: bold;
+    margin-right: 8px;
+}
+
+.match-score {
+    font-size: 1.3em;
+    font-weight: bold;
+    color: var(--text);
+    padding: 15px;
+    background: #fff;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+}
+
+.match-score span:last-child {
+    color: var(--accent);
+    font-size: 1.5em;
+}
+
+.profession-salary {
+    margin-top: 15px;
+    padding: 12px;
+    background: #edf2f7;
+    border-radius: 4px;
+    font-size: 1.1em;
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+
+.profession-salary strong {
+    color: var(--primary-strong);
+}
+
+.other-professions {
+    margin-top: 30px;
+}
+
+.other-professions h4 {
+    color: var(--primary-strong);
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.professions-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.profession-mini {
+    background: #f7fafc;
+    padding: 15px;
+    border-radius: 4px;
+    text-align: center;
+    border: 2px solid var(--border);
+    transition: all 0.2s;
+}
+
+.profession-mini:hover {
+    border-color: #cbd5e0;
+}
+
+.profession-mini.selected {
+    background: var(--primary-strong);
+    color: white;
+    border-color: var(--primary-strong);
+}
+
+.profession-mini.selected .profession-mini-icon,
+.profession-mini.selected .profession-mini-name,
+.profession-mini.selected .profession-mini-match {
+    color: white;
+}
+
+.profession-mini-icon {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+}
+
+.profession-mini-name {
+    font-weight: bold;
+    color: var(--primary-strong);
+    margin-bottom: 5px;
+}
+
+.profession-mini-match {
+    font-size: 0.9em;
+    color: var(--primary);
+}
+
+@media (max-width: 768px) {
+    .professions-list {
+        grid-template-columns: 1fr;
+    }
+}
+
