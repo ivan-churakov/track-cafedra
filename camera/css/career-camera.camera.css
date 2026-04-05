@@ -1,0 +1,128 @@
+.camera-section {
+    margin-bottom: 30px;
+}
+
+.camera-container {
+    position: relative;
+    width: 100%;
+    max-width: 640px;
+    margin: 0 auto 20px;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 2px solid #cbd5e0;
+    background: #000;
+}
+
+#video {
+    width: 100%;
+    height: auto;
+    display: block;
+    transform: scaleX(-1);
+}
+
+#captureCanvas {
+    width: 100%;
+    height: auto;
+    display: none;
+    transform: scaleX(-1);
+}
+
+.contour-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    display: none;
+    transform: scaleX(-1);
+}
+
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.scan-line {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    box-shadow: 0 0 12px rgba(0, 181, 173, 0.8);
+    transition: top 0.05s linear;
+}
+
+/* Селектор области фокусировки */
+.focus-area-selector {
+    background: #f7fafc;
+    border-radius: 4px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border);
+}
+
+.focus-area-selector h4 {
+    text-align: center;
+    color: var(--primary-strong);
+    margin-bottom: 15px;
+    font-size: 1.1em;
+}
+
+.focus-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.focus-btn {
+    padding: 10px 20px;
+    border: 1px solid var(--primary);
+    border-radius: 4px;
+    background: white;
+    color: var(--primary);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.focus-btn:hover {
+    background: #edf2f7;
+}
+
+.focus-btn.active {
+    background: var(--primary-strong);
+    color: white;
+    border-color: var(--primary-strong);
+}
+
+.focus-frame {
+    position: absolute;
+    border: 2px solid var(--accent);
+    border-radius: 4px;
+    box-shadow: 0 0 0 1px rgba(0, 181, 173, 0.5);
+    pointer-events: none;
+    z-index: 10;
+}
+
+@media (max-width: 768px) {
+    .focus-buttons {
+        gap: 8px;
+    }
+
+    .focus-btn {
+        padding: 8px 15px;
+        font-size: 12px;
+    }
+
+    .focus-area-selector {
+        padding: 15px;
+    }
+}
+
