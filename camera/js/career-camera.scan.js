@@ -3,6 +3,7 @@
 
     let scannerAnimationId = null;
     let scanY = 0;
+    let lastRh = 0;
     let offscreenCanvas = null;
     let offscreenCtx = null;
 
@@ -48,6 +49,16 @@
         const contourCanvas = CC.ui.contourCanvas;
         const scanLineEl = CC.ui.scanLine;
 
+        const fr = CC.getActiveFocusRectForSize(w, h);
+        const rx = Math.max(0, Math.min(fr.x, w - 1));
+        const ry = Math.max(0, Math.min(fr.y, h - 1));
+        const rw = Math.max(1, Math.min(fr.width, w - rx));
+        const rh = Math.max(1, Math.min(fr.height, h - ry));
+        if (rh !== lastRh) {
+            scanY = 0;
+            lastRh = rh;
+        }
+
         if (!offscreenCanvas || offscreenCanvas.width !== w) {
             offscreenCanvas = document.createElement('canvas');
             offscreenCanvas.width = w;
@@ -64,15 +75,20 @@
         const imgData = offscreenCtx.getImageData(0, 0, w, h);
         const edgePixels = CC.getEdgePixels(imgData.data, w, h);
 
-        scanY = (scanY + SCAN_SPEED) % (h + 80);
-        const scanCenter = scanY - 40;
+        scanY = (scanY + SCAN_SPEED) % Math.max(rh, 1);
+        const scanCenter = ry + scanY;
 
         const ctx = contourCanvas.getContext('2d');
         ctx.clearRect(0, 0, w, h);
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(rx, ry, rw, rh);
+        ctx.clip();
 
         const pixelSize = Math.max(1.5, Math.min(3, w / 240));
 
         edgePixels.forEach((p) => {
+            if (p.x < rx || p.x >= rx + rw || p.y < ry || p.y >= ry + rh) return;
             const d = Math.abs(p.y - scanCenter);
             let alpha = 0;
             if (d < SCAN_BAND) {
@@ -89,9 +105,10 @@
             }
         });
         ctx.shadowBlur = 0;
+        ctx.restore();
 
         if (scanLineEl) {
-            scanLineEl.style.top = (scanCenter / h) * 100 + '%';
+            scanLineEl.style.top = rh > 0 ? (scanY / rh) * 100 + '%' : '0%';
         }
 
         scannerAnimationId = requestAnimationFrame(contourScannerLoop);
@@ -99,6 +116,7 @@
 
     CC.startContourScanner = () => {
         scanY = 0;
+        lastRh = 0;
         if (scannerAnimationId) cancelAnimationFrame(scannerAnimationId);
         scannerAnimationId = requestAnimationFrame(contourScannerLoop);
     };
@@ -118,18 +136,28 @@
             return;
         }
 
-        let captureScanY = -SCAN_BAND;
+        const fr = CC.getActiveFocusRectForSize(w, h);
+        const rx = Math.max(0, Math.min(fr.x, w - 1));
+        const ry = Math.max(0, Math.min(fr.y, h - 1));
+        const rw = Math.max(1, Math.min(fr.width, w - rx));
+        const rh = Math.max(1, Math.min(fr.height, h - ry));
+
+        let captureScanY = 0;
 
         function frame() {
-            captureScanY += CAPTURE_SCAN_SPEED;
-            const scanCenter = captureScanY;
+            const scanCenter = ry + captureScanY;
 
             const ctx = contourCanvas.getContext('2d');
             ctx.clearRect(0, 0, w, h);
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(rx, ry, rw, rh);
+            ctx.clip();
 
             const pixelSize = Math.max(1.5, Math.min(3, w / 240));
 
             edgePixels.forEach((p) => {
+                if (p.x < rx || p.x >= rx + rw || p.y < ry || p.y >= ry + rh) return;
                 const d = Math.abs(p.y - scanCenter);
                 let alpha = 0;
                 if (d < SCAN_BAND) {
@@ -146,10 +174,12 @@
                 }
             });
             ctx.shadowBlur = 0;
+            ctx.restore();
 
-            scanLineEl.style.top = (scanCenter / h) * 100 + '%';
+            scanLineEl.style.top = rh > 0 ? (captureScanY / rh) * 100 + '%' : '0%';
 
-            if (captureScanY < h + SCAN_BAND) {
+            captureScanY += CAPTURE_SCAN_SPEED;
+            if (captureScanY < rh + SCAN_BAND) {
                 requestAnimationFrame(frame);
             } else {
                 onComplete();

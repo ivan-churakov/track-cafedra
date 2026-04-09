@@ -18,6 +18,14 @@
     height: auto;
     display: block;
     transform: scaleX(-1);
+    touch-action: none;
+    cursor: crosshair;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+#video.is-focus-dragging {
+    cursor: grabbing;
 }
 
 #captureCanvas {
@@ -36,6 +44,7 @@
     pointer-events: none;
     display: none;
     transform: scaleX(-1);
+    z-index: 10;
 }
 
 .overlay {
@@ -45,6 +54,15 @@
     width: 100%;
     height: 100%;
     pointer-events: none;
+    z-index: 14;
+}
+
+.scan-line-region {
+    position: absolute;
+    pointer-events: none;
+    overflow: hidden;
+    border-radius: 12px;
+    box-sizing: border-box;
 }
 
 .scan-line {
@@ -54,7 +72,6 @@
     height: 4px;
     background: linear-gradient(90deg, transparent, var(--accent), transparent);
     box-shadow: 0 0 12px rgba(0, 181, 173, 0.8);
-    transition: top 0.05s linear;
 }
 
 /* Селектор области фокусировки */
@@ -102,13 +119,123 @@
     border-color: var(--primary-strong);
 }
 
+/* Область анализа — «визор» с углами и лёгкой анимацией */
 .focus-frame {
     position: absolute;
-    border: 2px solid var(--accent);
-    border-radius: 4px;
-    box-shadow: 0 0 0 1px rgba(0, 181, 173, 0.5);
     pointer-events: none;
-    z-index: 10;
+    z-index: 15;
+    box-sizing: border-box;
+    border-radius: 14px;
+    overflow: visible;
+}
+
+.focus-frame__pulse {
+    position: absolute;
+    z-index: 0;
+    inset: -5px;
+    border-radius: 16px;
+    border: 1px solid rgba(0, 181, 173, 0.35);
+    box-shadow:
+        0 0 20px rgba(0, 181, 173, 0.25),
+        inset 0 0 30px rgba(0, 181, 173, 0.06);
+    animation: focusFramePulse 2.4s ease-in-out infinite;
+}
+
+.focus-frame__corner {
+    position: absolute;
+    z-index: 2;
+    width: min(26%, 52px);
+    height: min(26%, 52px);
+    min-width: 28px;
+    min-height: 28px;
+    border-color: var(--accent);
+    border-style: solid;
+    filter: drop-shadow(0 0 6px rgba(0, 181, 173, 0.85));
+}
+
+.focus-frame__corner--tl {
+    top: 0;
+    left: 0;
+    border-width: 3px 0 0 3px;
+    border-radius: 10px 0 0 0;
+}
+
+.focus-frame__corner--tr {
+    top: 0;
+    right: 0;
+    border-width: 3px 3px 0 0;
+    border-radius: 0 10px 0 0;
+}
+
+.focus-frame__corner--bl {
+    bottom: 0;
+    left: 0;
+    border-width: 0 0 3px 3px;
+    border-radius: 0 0 0 10px;
+}
+
+.focus-frame__corner--br {
+    bottom: 0;
+    right: 0;
+    border-width: 0 3px 3px 0;
+    border-radius: 0 0 10px 0;
+}
+
+.focus-frame__shine {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: 12px;
+    background: linear-gradient(
+        125deg,
+        rgba(255, 255, 255, 0) 40%,
+        rgba(255, 255, 255, 0.06) 48%,
+        rgba(255, 255, 255, 0.12) 50%,
+        rgba(255, 255, 255, 0.06) 52%,
+        rgba(255, 255, 255, 0) 60%
+    );
+    background-size: 200% 200%;
+    animation: focusFrameShine 4s ease-in-out infinite;
+    mix-blend-mode: soft-light;
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+@keyframes focusFramePulse {
+    0%,
+    100% {
+        opacity: 0.75;
+        box-shadow:
+            0 0 16px rgba(0, 181, 173, 0.2),
+            inset 0 0 24px rgba(0, 181, 173, 0.05);
+    }
+    50% {
+        opacity: 1;
+        box-shadow:
+            0 0 28px rgba(0, 181, 173, 0.45),
+            inset 0 0 36px rgba(0, 181, 173, 0.1);
+    }
+}
+
+@keyframes focusFrameShine {
+    0%,
+    100% {
+        background-position: 0% 40%;
+    }
+    50% {
+        background-position: 100% 60%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .focus-frame__pulse,
+    .focus-frame__shine {
+        animation: none;
+    }
+
+    .focus-frame__pulse {
+        opacity: 0.9;
+    }
 }
 
 @media (max-width: 768px) {

@@ -7,6 +7,165 @@
 
     CC.stream = null;
     CC.currentResult = null;
+    /** @type {{ x: number, y: number, width: number, height: number } | null} */
+    CC.focusRect = null;
+
+    const FOCUS_BOX_RATIO = 0.42;
+
+    /** @type {{ x: number, y: number } | null} */
+    let focusDragStart = null;
+
+    function clientToBuffer(clientX, clientY, videoEl) {
+        const rect = videoEl.getBoundingClientRect();
+        const relX = (clientX - rect.left) / rect.width;
+        const relY = (clientY - rect.top) / rect.height;
+        const vw = videoEl.videoWidth;
+        const vh = videoEl.videoHeight;
+        const bufX = (1 - relX) * vw;
+        const bufY = relY * vh;
+        return { x: bufX, y: bufY };
+    }
+
+    function rectAroundPoint(cx, cy, w, h) {
+        const side = Math.min(w, h) * FOCUS_BOX_RATIO;
+        let x = cx - side / 2;
+        let y = cy - side / 2;
+        x = Math.max(0, Math.min(x, w - side));
+        y = Math.max(0, Math.min(y, h - side));
+        const rw = Math.min(side, w - x);
+        const rh = Math.min(side, h - y);
+        return { x, y, width: rw, height: rh };
+    }
+
+    function clampFocusRect(x, y, w, h, vw, vh) {
+        x = Math.max(0, Math.min(x, vw));
+        y = Math.max(0, Math.min(y, vh));
+        w = Math.max(0, Math.min(w, vw - x));
+        h = Math.max(0, Math.min(h, vh - y));
+        return { x, y, width: w, height: h };
+    }
+
+    function rectFromDragCorners(x0, y0, x1, y1, vw, vh) {
+        const x = Math.min(x0, x1);
+        const y = Math.min(y0, y1);
+        const w = Math.abs(x1 - x0);
+        const h = Math.abs(y1 - y0);
+        return clampFocusRect(x, y, w, h, vw, vh);
+    }
+
+    function finalizeFocusRectAfterDrag(rect, x0, y0, x1, y1, vw, vh) {
+        const minSide = Math.max(28, Math.min(vw, vh) * 0.06);
+        if (rect.width >= minSide && rect.height >= minSide) return rect;
+        const cx = (x0 + x1) / 2;
+        const cy = (y0 + y1) / 2;
+        return rectAroundPoint(cx, cy, vw, vh);
+    }
+
+    function syncFocusOverlay() {
+        if (!ui.focusFrame || !ui.video || !CC.stream) return;
+        const vw = ui.video.videoWidth;
+        const vh = ui.video.videoHeight;
+        if (!vw || !vh) return;
+
+        const rect = CC.focusRect || CC.getDefaultAnalysisRect({ width: vw, height: vh });
+        const leftPct = (1 - (rect.x + rect.width) / vw) * 100;
+        const topPct = (rect.y / vh) * 100;
+        const wPct = (rect.width / vw) * 100;
+        const hPct = (rect.height / vh) * 100;
+
+        ui.focusFrame.style.left = `${leftPct}%`;
+        ui.focusFrame.style.top = `${topPct}%`;
+        ui.focusFrame.style.width = `${wPct}%`;
+        ui.focusFrame.style.height = `${hPct}%`;
+        CC.show(ui.focusFrame);
+
+        if (ui.scanLineRegion) {
+            ui.scanLineRegion.style.left = `${leftPct}%`;
+            ui.scanLineRegion.style.top = `${topPct}%`;
+            ui.scanLineRegion.style.width = `${wPct}%`;
+            ui.scanLineRegion.style.height = `${hPct}%`;
+        }
+    }
+
+    function scheduleFocusOverlaySync() {
+        if (ui.video.videoWidth) {
+            syncFocusOverlay();
+        } else {
+            ui.video.addEventListener('loadedmetadata', syncFocusOverlay, { once: true });
+        }
+    }
+
+    window.addEventListener('resize', () => {
+        if (CC.stream) syncFocusOverlay();
+    });
+
+    function endFocusDrag(e) {
+        if (focusDragStart === null || !CC.stream || !ui.video.videoWidth) return;
+        const vw = ui.video.videoWidth;
+        const vh = ui.video.videoHeight;
+        const end = clientToBuffer(e.clientX, e.clientY, ui.video);
+        const x0 = focusDragStart.x;
+        const y0 = focusDragStart.y;
+        const x1 = end.x;
+        const y1 = end.y;
+        focusDragStart = null;
+        ui.video.classList.remove('is-focus-dragging');
+        try {
+            ui.video.releasePointerCapture(e.pointerId);
+        } catch (_) {
+            /* already released */
+        }
+
+        let rect = rectFromDragCorners(x0, y0, x1, y1, vw, vh);
+        rect = finalizeFocusRectAfterDrag(rect, x0, y0, x1, y1, vw, vh);
+        CC.focusRect = rect;
+        syncFocusOverlay();
+        CC.setStatus('Область анализа выбрана. Нажмите «Анализировать».', 'success');
+    }
+
+    function onVideoPointerDown(e) {
+        if (!CC.stream || !ui.video.videoWidth) return;
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+
+        focusDragStart = clientToBuffer(e.clientX, e.clientY, ui.video);
+        ui.video.classList.add('is-focus-dragging');
+        try {
+            ui.video.setPointerCapture(e.pointerId);
+        } catch (_) {
+            /* ignore */
+        }
+
+        const vw = ui.video.videoWidth;
+        const vh = ui.video.videoHeight;
+        CC.focusRect = rectFromDragCorners(
+            focusDragStart.x,
+            focusDragStart.y,
+            focusDragStart.x,
+            focusDragStart.y,
+            vw,
+            vh
+        );
+        syncFocusOverlay();
+    }
+
+    function onVideoPointerMove(e) {
+        if (focusDragStart === null || !CC.stream || !ui.video.videoWidth) return;
+        const cur = clientToBuffer(e.clientX, e.clientY, ui.video);
+        const vw = ui.video.videoWidth;
+        const vh = ui.video.videoHeight;
+        CC.focusRect = rectFromDragCorners(focusDragStart.x, focusDragStart.y, cur.x, cur.y, vw, vh);
+        syncFocusOverlay();
+    }
+
+    ui.video.addEventListener('pointerdown', onVideoPointerDown);
+    ui.video.addEventListener('pointermove', onVideoPointerMove);
+    ui.video.addEventListener('pointerup', endFocusDrag);
+    ui.video.addEventListener('pointercancel', endFocusDrag);
+    ui.video.addEventListener('lostpointercapture', () => {
+        if (focusDragStart === null) return;
+        focusDragStart = null;
+        ui.video.classList.remove('is-focus-dragging');
+    });
 
     function showTechProgressBar(onComplete) {
         if (!ui.techProgressWrap || !ui.techProgressBar || !ui.techProgressLabel) return;
@@ -128,11 +287,16 @@
             });
 
             ui.video.srcObject = CC.stream;
+            CC.focusRect = null;
             CC.hide(ui.startCameraBtn);
             CC.show(ui.analyzeBtn);
-            CC.show(ui.scanLine);
-            CC.setStatus('Камера активирована! Нажмите "Анализировать", чтобы выполнить сканирование.', 'success');
+            CC.show(ui.scanLineRegion || ui.scanLine);
+            CC.setStatus(
+                'Камера включена. Зажмите и выделите область на экране, затем нажмите «Анализировать».',
+                'success'
+            );
 
+            scheduleFocusOverlaySync();
             CC.startContourScanner();
         } catch (error) {
             CC.setStatus('Ошибка доступа к камере: ' + error.message, 'error');
@@ -157,6 +321,8 @@
 
         CC.setStatus('Фиксация кадра...', 'info');
         CC.stopContourScanner();
+        syncFocusOverlay();
+        CC.hide(ui.focusFrame);
 
         ui.captureCanvas.width = ui.video.videoWidth;
         ui.captureCanvas.height = ui.video.videoHeight;
@@ -179,7 +345,7 @@
         ui.contourCanvas.width = ui.captureCanvas.width;
         ui.contourCanvas.height = ui.captureCanvas.height;
         ui.contourCanvas.style.display = 'block';
-        CC.show(ui.scanLine);
+        CC.show(ui.scanLineRegion || ui.scanLine);
 
         CC.setStatus('Сканирование...', 'info');
 
@@ -188,11 +354,12 @@
 
         CC.runCaptureScan(edgePixels, ui.captureCanvas.width, ui.captureCanvas.height, () => {
             CC.hide(ui.overlay);
-            CC.hide(ui.scanLine);
+            CC.hide(ui.scanLineRegion || ui.scanLine);
             ui.contourCanvas.style.display = 'none';
 
             CC.setStatus('Анализ изображения...', 'info');
-            const result = CC.analyzeImage(ui.captureCanvas);
+            const analysisRect = CC.focusRect || CC.getDefaultAnalysisRect(ui.captureCanvas);
+            const result = CC.analyzeImage(ui.captureCanvas, analysisRect);
             displayResult(result);
 
             CC.hide(ui.analyzeBtn);
@@ -205,6 +372,8 @@
         CC.hide(ui.analyzeBtn);
         CC.hide(ui.retryBtn);
         hideTechProgressBar();
+
+        CC.focusRect = null;
 
         ui.captureCanvas.style.display = 'none';
         if (ui.contourCanvas) ui.contourCanvas.style.display = 'none';
@@ -220,8 +389,12 @@
             ui.video.classList.remove(CC.IS_HIDDEN_CLASS);
             CC.show(ui.overlay);
             CC.show(ui.analyzeBtn);
-            CC.show(ui.scanLine);
-            CC.setStatus('Камера активирована! Нажмите "Анализировать", чтобы выполнить сканирование.', 'success');
+            CC.show(ui.scanLineRegion || ui.scanLine);
+            CC.setStatus(
+                'Камера включена. Зажмите и выделите область на экране, затем нажмите «Анализировать».',
+                'success'
+            );
+            scheduleFocusOverlaySync();
             CC.startContourScanner();
         } catch (error) {
             CC.setStatus('Ошибка доступа к камере: ' + error.message, 'error');
