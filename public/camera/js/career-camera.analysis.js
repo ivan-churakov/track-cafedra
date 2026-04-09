@@ -1,14 +1,34 @@
-(() => {
+ (() => {
     const CC = (window.CareerCamera = window.CareerCamera || {});
 
-    CC.analyzeImage = (canvas) => {
+    /** Весь кадр — пока пользователь не выделил область вручную. */
+    CC.getDefaultAnalysisRect = (size) => {
+        const cw = size.width;
+        const ch = size.height;
+        return { x: 0, y: 0, width: cw, height: ch };
+    };
+
+    /** Активная область выделения в координатах кадра ширины w × высоты h. */
+    CC.getActiveFocusRectForSize = (w, h) => {
+        return CC.focusRect || CC.getDefaultAnalysisRect({ width: w, height: h });
+    };
+
+    CC.analyzeImage = (canvas, rect) => {
         const ctx = canvas.getContext('2d');
 
-        // Анализируем автоматически центральную область кадра (там обычно находится человек)
-        const width = canvas.width * 0.6;
-        const height = canvas.height * 0.7;
-        const x = (canvas.width - width) / 2;
-        const y = (canvas.height - height) / 2.5;
+        const base = rect || CC.getDefaultAnalysisRect(canvas);
+        let x = Math.max(0, Math.floor(base.x));
+        let y = Math.max(0, Math.floor(base.y));
+        let width = Math.min(canvas.width - x, Math.max(1, Math.ceil(base.width)));
+        let height = Math.min(canvas.height - y, Math.max(1, Math.ceil(base.height)));
+
+        if (width < 4 || height < 4) {
+            const d = CC.getDefaultAnalysisRect(canvas);
+            x = Math.max(0, Math.floor(d.x));
+            y = Math.max(0, Math.floor(d.y));
+            width = Math.min(canvas.width - x, Math.ceil(d.width));
+            height = Math.min(canvas.height - y, Math.ceil(d.height));
+        }
 
         const imageData = ctx.getImageData(x, y, width, height);
         const data = imageData.data;

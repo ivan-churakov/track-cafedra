@@ -5,9 +5,11 @@
 
     CC.ui = {
         video: document.getElementById('video'),
+        focusFrame: document.getElementById('focusFrame'),
         captureCanvas: document.getElementById('captureCanvas'),
         contourCanvas: document.getElementById('contourCanvas'),
         overlay: document.getElementById('overlay'),
+        scanLineRegion: document.getElementById('scanLineRegion'),
         scanLine: document.getElementById('scanLine'),
         startCameraBtn: document.getElementById('startCameraBtn'),
         analyzeBtn: document.getElementById('analyzeBtn'),

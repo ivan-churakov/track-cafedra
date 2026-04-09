@@ -1,129 +1,115 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Определение профессии</title>
-    <link rel="stylesheet" href="css/career-camera.base.css" />
-    <link rel="stylesheet" href="css/career-camera.camera.css" />
-    <link rel="stylesheet" href="css/career-camera.result.css" />
-    <link rel="stylesheet" href="css/career-camera.cafedra.css" />
-    <link rel="stylesheet" href="css/career-camera.effects.css" />
-  </head>
-  <body>
-    <div class="app-container">
-      <header class="app-header">
-        <h1>Определение профессии</h1>
-        <p>
-          Позвольте камере проанализировать вас и определить подходящую
-          профессию
-        </p>
-      </header>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Определение профессии</title>
+  <link rel="stylesheet" href="css/career-camera.base.css">
+  <link rel="stylesheet" href="css/career-camera.camera.css">
+  <link rel="stylesheet" href="css/career-camera.result.css">
+  <link rel="stylesheet" href="css/career-camera.cafedra.css">
+  <link rel="stylesheet" href="css/career-camera.effects.css">
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <h1>Определение профессии</h1>
+      <p>Позвольте камере проанализировать вас и определить подходящую профессию</p>
+    </header>
 
-      <div class="camera-section">
-        <div class="camera-container">
-          <video id="video" autoplay playsinline></video>
-          <canvas id="captureCanvas"></canvas>
-          <canvas id="contourCanvas" class="contour-overlay"></canvas>
-          <div id="overlay" class="overlay">
-            <div id="scanLine" class="scan-line is-hidden"></div>
-          </div>
+    <div class="camera-section">
+      <p id="status" class="status-message info" role="status">Нажмите «Включить камеру», чтобы начать.</p>
+      <div class="camera-container">
+        <video id="video" autoplay playsinline></video>
+        <div id="focusFrame" class="focus-frame is-hidden" aria-hidden="true">
+          <span class="focus-frame__pulse" aria-hidden="true"></span>
+          <span class="focus-frame__shine" aria-hidden="true"></span>
+          <span class="focus-frame__corner focus-frame__corner--tl" aria-hidden="true"></span>
+          <span class="focus-frame__corner focus-frame__corner--tr" aria-hidden="true"></span>
+          <span class="focus-frame__corner focus-frame__corner--bl" aria-hidden="true"></span>
+          <span class="focus-frame__corner focus-frame__corner--br" aria-hidden="true"></span>
         </div>
-
-        <div class="controls-panel">
-          <button id="startCameraBtn" class="btn btn-primary" type="button">
-            Включить камеру
-          </button>
-          <button
-            id="analyzeBtn"
-            class="btn btn-analyze is-hidden"
-            type="button"
-          >
-            Анализировать
-          </button>
-          <button
-            id="retryBtn"
-            class="btn btn-secondary is-hidden"
-            type="button"
-          >
-            Повторить
-          </button>
-        </div>
-
-        <div id="techProgressWrap" class="tech-progress-wrap is-hidden">
-          <div class="tech-progress-track">
-            <div id="techProgressBar" class="tech-progress-bar"></div>
-            <div class="tech-progress-glow"></div>
-            <div class="tech-progress-scan"></div>
-          </div>
-          <span id="techProgressLabel" class="tech-progress-label">0%</span>
-        </div>
-      </div>
-
-      <div id="resultSection" class="result-section is-hidden">
-        <h2>Результат анализа</h2>
-        <div class="profession-card">
-          <div id="professionIcon" class="profession-icon">💼</div>
-          <h3 id="professionName">Профессия</h3>
-          <p id="professionDescription" class="profession-description"></p>
-          <div class="profession-skills">
-            <h4>Необходимые навыки:</h4>
-            <ul id="professionSkills"></ul>
-          </div>
-          <div class="match-score">
-            <span>Совпадение: </span>
-            <span id="matchPercentage">0%</span>
-          </div>
-          <div id="professionSalary" class="profession-salary"></div>
-        </div>
-
-        <div class="other-professions">
-          <h4>Другие подходящие профессии:</h4>
-          <div id="otherProfessions" class="professions-list"></div>
-        </div>
-
-        <div class="cafedra-section">
-          <div class="cafedra-card">
-            <h3>Рекомендации кафедры КБ9</h3>
-            <p class="cafedra-intro">
-              На основе вашей профессии мы рекомендуем следующие дисциплины
-              нашей кафедры:
-            </p>
-            <div id="recommendedTopics" class="topics-list"></div>
-            <div class="cafedra-info">
-              <h4>Почему стоит выбрать кафедру КБ9?</h4>
-              <ul class="cafedra-benefits">
-                <li>
-                  Современные программы обучения в области информационных систем
-                </li>
-                <li>Практико-ориентированный подход с реальными проектами</li>
-                <li>Опытные преподаватели и актуальные технологии</li>
-                <li>
-                  Широкий спектр дисциплин от программирования до бизнес-анализа
-                </li>
-                <li>Отличные перспективы трудоустройства</li>
-              </ul>
-              <p class="cafedra-cta">
-                <strong
-                  >Присоединяйтесь к кафедре КБ9 и станьте востребованным
-                  IT-специалистом!</strong
-                >
-              </p>
-            </div>
+        <canvas id="captureCanvas"></canvas>
+        <canvas id="contourCanvas" class="contour-overlay"></canvas>
+        <div id="overlay" class="overlay">
+          <div id="scanLineRegion" class="scan-line-region is-hidden">
+            <div id="scanLine" class="scan-line"></div>
           </div>
         </div>
       </div>
 
-      <div class="info-section">
-        <a href="../index.html" class="back-link">← Вернуться на главную</a>
+      <div class="controls-panel">
+        <button id="startCameraBtn" class="btn btn-primary" type="button">Включить камеру</button>
+        <button id="analyzeBtn" class="btn btn-analyze is-hidden" type="button">Анализировать</button>
+        <button id="retryBtn" class="btn btn-secondary is-hidden" type="button">Повторить</button>
+      </div>
+
+      <div id="techProgressWrap" class="tech-progress-wrap is-hidden">
+        <div class="tech-progress-track">
+          <div id="techProgressBar" class="tech-progress-bar"></div>
+          <div class="tech-progress-glow"></div>
+          <div class="tech-progress-scan"></div>
+        </div>
+        <span id="techProgressLabel" class="tech-progress-label">0%</span>
       </div>
     </div>
 
-    <script src="js/career-camera.ui.js"></script>
-    <script src="js/career-camera.data.js"></script>
-    <script src="js/career-camera.scan.js"></script>
-    <script src="js/career-camera.analysis.js"></script>
-    <script src="js/career-camera.topics.js"></script>
-    <script src="js/career-camera.app.js"></script>
-  </body>
+    <div id="resultSection" class="result-section is-hidden">
+      <h2>Результат анализа</h2>
+      <div class="profession-card">
+        <div id="professionIcon" class="profession-icon">💼</div>
+        <h3 id="professionName">Профессия</h3>
+        <p id="professionDescription" class="profession-description"></p>
+        <div class="profession-skills">
+          <h4>Необходимые навыки:</h4>
+          <ul id="professionSkills"></ul>
+        </div>
+        <div class="match-score">
+          <span>Совпадение: </span>
+          <span id="matchPercentage">0%</span>
+        </div>
+        <div id="professionSalary" class="profession-salary"></div>
+      </div>
+
+      <div class="other-professions">
+        <h4>Другие подходящие профессии:</h4>
+        <div id="otherProfessions" class="professions-list"></div>
+      </div>
+
+      <div class="cafedra-section">
+        <div class="cafedra-card">
+          <h3>Рекомендации кафедры КБ9</h3>
+          <p class="cafedra-intro">
+            На основе вашей профессии мы рекомендуем следующие дисциплины нашей кафедры:
+          </p>
+          <div id="recommendedTopics" class="topics-list"></div>
+          <div class="cafedra-info">
+            <h4>Почему стоит выбрать кафедру КБ9?</h4>
+            <ul class="cafedra-benefits">
+              <li>Современные программы обучения в области информационных систем</li>
+              <li>Практико-ориентированный подход с реальными проектами</li>
+              <li>Опытные преподаватели и актуальные технологии</li>
+              <li>Широкий спектр дисциплин от программирования до бизнес-анализа</li>
+              <li>Отличные перспективы трудоустройства</li>
+            </ul>
+            <p class="cafedra-cta">
+              <strong>Присоединяйтесь к кафедре КБ9 и станьте востребованным IT-специалистом!</strong>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-section">
+      <a href="../index.html" class="back-link">← Вернуться на главную</a>
+    </div>
+  </div>
+
+  <script src="js/career-camera.ui.js"></script>
+  <script src="js/career-camera.data.js"></script>
+  <script src="js/career-camera.analysis.js"></script>
+  <script src="js/career-camera.scan.js"></script>
+  <script src="js/career-camera.topics.js"></script>
+  <script src="js/career-camera.app.js"></script>
+</body>
 </html>
