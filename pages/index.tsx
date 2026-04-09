@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import cross from "../image/cross.svg";
 import trackTVP from "../image/trackTVP.png";
@@ -9,6 +9,7 @@ import card2 from "../image/card123.svg";
 import lesenka from "../image/cardSoty.svg";
 import card11 from "../image/card11.png";
 import logoKB from "../image/KBSP_white.png";
+import scannerPreview from "../image/scaneer preview.png";
 import { Video } from "../Components/Video/Video";
 import { PresentationSlider } from "../Components/PresentationSlider/PresentationSlider";
 import Link from "next/link";
@@ -23,6 +24,67 @@ export default function Home() {
   const [course, setCourse] = useState(0);
   const [currentTrack, setCurrentTrack] = useState(0);
   const [openTrack, setOpenTrack] = useState(false);
+
+  const tracks = [
+    {
+      href: "/track",
+      title: "09.03.02 профиль РКБП",
+      img: trackRKBP,
+      alt: "Картинка трека РКБП",
+    },
+    {
+      href: "/track2",
+      title: "09.03.02 профиль ТВП",
+      img: trackTVP,
+      alt: "Картинка трека ТВП",
+    },
+  ];
+
+  const goPrevTrack = () =>
+    setCurrentTrack((prev) => (prev - 1 + tracks.length) % tracks.length);
+  const goNextTrack = () =>
+    setCurrentTrack((prev) => (prev + 1) % tracks.length);
+
+  const trackTouchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const trackDidSwipeRef = useRef(false);
+
+  const onTrackTouchStart: React.TouchEventHandler = (e) => {
+    const t = e.touches[0];
+    if (!t) return;
+    trackTouchStartRef.current = { x: t.clientX, y: t.clientY };
+    trackDidSwipeRef.current = false;
+  };
+
+  const onTrackTouchMove: React.TouchEventHandler = (e) => {
+    if (!trackTouchStartRef.current) return;
+    const t = e.touches[0];
+    if (!t) return;
+
+    const dx = t.clientX - trackTouchStartRef.current.x;
+    const dy = t.clientY - trackTouchStartRef.current.y;
+
+    // Если жест больше похож на горизонтальный — считаем его свайпом.
+    if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy)) {
+      trackDidSwipeRef.current = true;
+    }
+  };
+
+  const onTrackTouchEnd: React.TouchEventHandler = (e) => {
+    if (!trackTouchStartRef.current) return;
+    const t = e.changedTouches[0];
+    if (!t) return;
+
+    const dx = t.clientX - trackTouchStartRef.current.x;
+    const dy = t.clientY - trackTouchStartRef.current.y;
+
+    trackTouchStartRef.current = null;
+
+    // Порог: достаточно уверенный горизонтальный свайп.
+    if (Math.abs(dx) < 40 || Math.abs(dx) <= Math.abs(dy)) return;
+
+    if (dx < 0) goNextTrack();
+    else goPrevTrack();
+  };
 
   const presentationImages = [
     "/презентация для дод_page-0001.jpg",
@@ -123,19 +185,52 @@ export default function Home() {
               alt="Картинка трека предметов"
             />
           </div> */}
-          <Link
-            href={"/track"}
-            className="flex-shrink-0 w-1/3 flex flex-col bg-white shadow-2xl rounded-xl p-4"
-          >
-            <p className="font-medium text-center text-xl">
-              09.03.02 профиль РКБП
-            </p>
-            <Image
-              className="w-full h-full object-contain"
-              src={trackRKBP}
-              alt="Картинка трека предметов"
-            />
-          </Link>
+          <div className="flex-shrink-0 w-1/3 flex flex-col bg-white shadow-2xl rounded-xl p-4 gap-3">
+            <div className="flex items-center justify-between gap-2">
+              <p className="font-medium text-center text-xl leading-tight">
+                {tracks[currentTrack]?.title}
+              </p>
+            </div>
+
+            <Link
+              href={tracks[currentTrack]?.href ?? "/track"}
+              className="relative flex-1 rounded-xl overflow-hidden ring-1 ring-black/5 hover:ring-black/10 transition-shadow touch-pan-y"
+              aria-label={`Открыть: ${tracks[currentTrack]?.title ?? "трек"}`}
+              onTouchStart={onTrackTouchStart}
+              onTouchMove={onTrackTouchMove}
+              onTouchEnd={onTrackTouchEnd}
+              onClick={(e) => {
+                // Если пользователь сделал свайп, не открываем ссылку.
+                if (trackDidSwipeRef.current) {
+                  e.preventDefault();
+                  trackDidSwipeRef.current = false;
+                }
+              }}
+            >
+              <Image
+                className="w-full h-full object-contain"
+                src={tracks[currentTrack]?.img ?? trackRKBP}
+                alt={tracks[currentTrack]?.alt ?? "Картинка трека"}
+              />
+            </Link>
+
+            <div className="flex items-center justify-center gap-2">
+              {tracks.map((t, idx) => (
+                <button
+                  key={t.href}
+                  type="button"
+                  onClick={() => setCurrentTrack(idx)}
+                  aria-label={`Перейти к: ${t.title}`}
+                  aria-pressed={currentTrack === idx}
+                  className={`h-2.5 rounded-full transition-all ${
+                    currentTrack === idx
+                      ? "w-6 bg-black/60"
+                      : "w-2.5 bg-black/20 hover:bg-black/30"
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
           {/* <div
             onClick={() => setShow2(true)}
             className="flex-shrink-0 w-1/3 flex flex-col bg-white shadow-2xl rounded-xl p-4 cursor-pointer"
@@ -162,27 +257,18 @@ export default function Home() {
             />
           </div>
           <Link
-            href={"/track2"}
-            className="flex-shrink-0 w-1/3 flex flex-col bg-white shadow-2xl rounded-xl p-4"
-          >
-            <p className="font-medium text-center text-xl">
-              09.03.02 профиль ТВП
-            </p>
-            <Image
-              className="w-full h-full object-contain"
-              src={trackTVP}
-              alt="Картинка трека предметов"
-            />
-          </Link>
-          <Link
             href={"/camera"}
-            className="flex-shrink-0 w-1/3 flex flex-col items-center justify-center bg-white shadow-2xl rounded-xl p-4 gap-4"
+            className="group flex-shrink-0 w-1/3 flex flex-col bg-white shadow-2xl rounded-xl p-4 gap-4 hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.35)] transition-shadow"
           >
             <p className="font-medium text-center text-xl">Определение профессии</p>
-            <div className="text-[80px] leading-none">📷</div>
-            <p className="text-center text-gray-500 text-sm">
-              Камера анализирует вас и определяет подходящую профессию
-            </p>
+            <div className="relative w-full flex-1 min-h-[210px] rounded-xl overflow-hidden bg-gradient-to-br from-[#e8f7f3] via-white to-[#f3f6ff] ring-1 ring-black/5">
+              <Image
+                src={scannerPreview}
+                alt="Превью сканера профессии"
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
+                priority
+              />
+            </div>
           </Link>
         </div>
         </div>
