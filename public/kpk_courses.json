@@ -1,0 +1,37 @@
+{
+  "courses": [
+    {
+      "id": 1,
+      "teacherId": 1,
+      "title": "Введение в Data Science",
+      "hours": 36,
+      "format": "mixed",
+      "startDate": "2026-05-12",
+      "room": "А-101 / онлайн",
+      "description": "Основы анализа данных, Python, pandas, визуализация.",
+      "status": "published"
+    },
+    {
+      "id": 2,
+      "teacherId": 1,
+      "title": "Проектирование высоконагруженных БД",
+      "hours": 72,
+      "format": "offline",
+      "startDate": null,
+      "room": "",
+      "description": "",
+      "status": "draft"
+    },
+    {
+      "id": 3,
+      "teacherId": 6,
+      "title": "Программно-аппаратные платформы IoT",
+      "hours": 40,
+      "format": "offline",
+      "startDate": "2026-06-02",
+      "room": "239а (С-20)",
+      "description": "Курс для специалистов по встраиваемым системам и IoT-решениям.",
+      "status": "published"
+    }
+  ]
+}

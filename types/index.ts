@@ -35,6 +35,18 @@ export interface DutySchedule {
 
 export type CalendarEventType = 'class' | 'retake' | 'commission' | 'duty';
 
+export interface KpkCourse {
+  id: number;
+  teacherId: number;
+  title: string;
+  hours: number;
+  format: 'offline' | 'online' | 'mixed';
+  startDate: string | null;
+  room: string;
+  description: string;
+  status: 'draft' | 'published';
+}
+
 export interface CalendarEvent {
   id: string;
   title: string;

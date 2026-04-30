@@ -307,6 +307,59 @@ export default function Home() {
             <Video src={"/TVP.MP4"} />
           </div>
         </div>
+
+        {/* Portal navigation */}
+        <div className="shrink-0">
+          <div className="mb-3">
+            <h2 className="text-white font-semibold text-2xl mb-1">Перейти в систему</h2>
+            <p className="text-gray-400 text-sm">
+              Расписание преподавателей, контакты и кабинеты — для студентов. Редактирование расписания и курсов — для преподавателей.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Link
+              href="/students"
+              className="group flex items-center gap-4 bg-white rounded-2xl p-5 shadow-xl hover:shadow-2xl transition-shadow"
+            >
+              <div className="w-14 h-14 flex-shrink-0 rounded-2xl bg-blue-50 flex items-center justify-center text-2xl">
+                👥
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                  <h3 className="font-semibold text-gray-900 text-lg leading-tight">Для студентов</h3>
+                  <span className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-medium whitespace-nowrap">
+                    без входа
+                  </span>
+                </div>
+                <p className="text-gray-500 text-sm leading-snug">
+                  Список преподавателей кафедры, расписание присутствия в вузе, номера кабинетов, контакты.
+                </p>
+              </div>
+              <span className="text-gray-300 group-hover:text-gray-500 text-2xl transition-colors flex-shrink-0">→</span>
+            </Link>
+
+            <Link
+              href="/teacher/login"
+              className="group flex items-center gap-4 bg-white rounded-2xl p-5 shadow-xl hover:shadow-2xl transition-shadow"
+            >
+              <div className="w-14 h-14 flex-shrink-0 rounded-2xl bg-amber-50 flex items-center justify-center text-2xl">
+                🎓
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                  <h3 className="font-semibold text-gray-900 text-lg leading-tight">Для преподавателей</h3>
+                  <span className="text-xs bg-amber-100 text-amber-600 px-2 py-0.5 rounded-full font-medium whitespace-nowrap">
+                    вход
+                  </span>
+                </div>
+                <p className="text-gray-500 text-sm leading-snug">
+                  Редактирование расписания, добавление курсов повышения квалификации, график пересдач.
+                </p>
+              </div>
+              <span className="text-gray-300 group-hover:text-gray-500 text-2xl transition-colors flex-shrink-0">→</span>
+            </Link>
+          </div>
+        </div>
       </div>
 
       {/* Модальное окно для презентации */}

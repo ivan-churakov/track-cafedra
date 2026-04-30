@@ -7,7 +7,7 @@ interface WeeklyCalendarProps {
 
 const DAY_NAMES = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 const HOUR_START = 8;
-const HOUR_END = 20;
+const HOUR_END = 22;
 const TOTAL_HOURS = HOUR_END - HOUR_START;
 const HOUR_HEIGHT = 60; // px per hour
 const CALENDAR_HEIGHT = TOTAL_HOURS * HOUR_HEIGHT;

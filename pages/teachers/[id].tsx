@@ -1,14 +1,25 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { GetStaticPaths, GetStaticProps } from 'next';
-import { Teacher, CalendarEvent, RetakeSchedule, DutySchedule } from '../../types';
+import { Teacher, CalendarEvent, CalendarEventType, RetakeSchedule, DutySchedule } from '../../types';
 import { WeeklyCalendar } from '../../Components/Calendar/WeeklyCalendar';
 import { fetchICalEvents } from '../../utils/ical';
+
+interface RawScheduleEvent {
+  id: string;
+  title: string;
+  start: string;
+  end: string;
+  type: CalendarEventType;
+  location?: string;
+  description?: string;
+}
 
 interface Props {
   teacher: Teacher;
   retakeSchedules: RetakeSchedule[];
   dutySchedules: DutySchedule[];
+  scheduleEvents: RawScheduleEvent[];
 }
 
 function retakeToEvent(r: RetakeSchedule): CalendarEvent {
@@ -49,12 +60,23 @@ function getDegreeLevel(degree: string | null): { label: string; color: string }
   return { label: degree, color: 'text-gray-300' };
 }
 
-export default function TeacherProfilePage({ teacher, retakeSchedules, dutySchedules }: Props) {
-  const [icalEvents, setIcalEvents] = useState<CalendarEvent[]>([]);
-  const [icalStatus, setIcalStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+export default function TeacherProfilePage({ teacher, retakeSchedules, dutySchedules, scheduleEvents }: Props) {
+  const preloadedEvents = useMemo((): CalendarEvent[] =>
+    scheduleEvents.map((e) => ({
+      ...e,
+      start: new Date(e.start),
+      end: new Date(e.end),
+    })),
+    [scheduleEvents]
+  );
+
+  const [icalEvents, setIcalEvents] = useState<CalendarEvent[]>(preloadedEvents);
+  const [icalStatus, setIcalStatus] = useState<'idle' | 'loading' | 'success' | 'error'>(
+    scheduleEvents.length > 0 ? 'success' : 'idle'
+  );
 
   useEffect(() => {
-    if (!teacher.schedule_url) return;
+    if (scheduleEvents.length > 0 || !teacher.schedule_url) return;
 
     setIcalStatus('loading');
     fetchICalEvents(teacher.schedule_url)
@@ -65,7 +87,7 @@ export default function TeacherProfilePage({ teacher, retakeSchedules, dutySched
       .catch(() => {
         setIcalStatus('error');
       });
-  }, [teacher.schedule_url]);
+  }, [teacher.schedule_url, scheduleEvents.length]);
 
   const allEvents = useMemo((): CalendarEvent[] => {
     const retakes = retakeSchedules.map(retakeToEvent);
@@ -274,7 +296,13 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
     (d: DutySchedule) => d.teacher_id === teacher.id
   );
 
+  let scheduleEvents: RawScheduleEvent[] = [];
+  try {
+    const data = require(`../../public/schedules/${teacher.id}.json`);
+    scheduleEvents = data.events || [];
+  } catch {}
+
   return {
-    props: { teacher, retakeSchedules, dutySchedules },
+    props: { teacher, retakeSchedules, dutySchedules, scheduleEvents },
   };
 };
