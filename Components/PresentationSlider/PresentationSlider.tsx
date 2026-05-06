@@ -95,7 +95,7 @@ export const PresentationSlider: React.FC<PresentationSliderProps> = ({
             src={images[currentIndex]}
             alt={`Слайд ${currentIndex + 1}`}
             fill
-            className="object-contain"
+            className="object-cover"
             priority={currentIndex === 0}
           />
         </div>

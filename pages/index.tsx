@@ -169,10 +169,10 @@ export default function Home() {
           />
         </div>
       </div>
-      <div className="h-full flex flex-col gap-10 p-4 sm:p-6">
-        <div className="flex-1 w-full overflow-x-auto pb-2">
-        <div className="flex h-full gap-8">
-          {/* <div
+      <div className="h-full flex flex-col gap-10">
+        <div className="h-[100vh] flex flex-col p-4 sm:p-6">
+          <div className="flex-1 min-h-0 w-full grid grid-cols-3 gap-8 pb-2">
+              {/* <div
             onClick={() => setShow1(true)}
             className="flex-shrink-0 w-1/3 flex flex-col bg-white shadow-2xl rounded-xl p-4 cursor-pointer"
           >
@@ -185,53 +185,53 @@ export default function Home() {
               alt="Картинка трека предметов"
             />
           </div> */}
-          <div className="flex-shrink-0 w-1/3 flex flex-col bg-white shadow-2xl rounded-xl p-4 gap-3">
-            <div className="flex items-center justify-between gap-2">
-              <p className="font-medium text-center text-xl leading-tight">
-                {tracks[currentTrack]?.title}
-              </p>
-            </div>
+              <div className="flex-shrink-0 flex flex-col bg-white shadow-2xl rounded-xl p-4 gap-3 overflow-hidden">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-medium text-center text-xl leading-tight">
+                    {tracks[currentTrack]?.title}
+                  </p>
+                </div>
 
-            <Link
-              href={tracks[currentTrack]?.href ?? "/track"}
-              className="relative flex-1 rounded-xl overflow-hidden ring-1 ring-black/5 hover:ring-black/10 transition-shadow touch-pan-y"
-              aria-label={`Открыть: ${tracks[currentTrack]?.title ?? "трек"}`}
-              onTouchStart={onTrackTouchStart}
-              onTouchMove={onTrackTouchMove}
-              onTouchEnd={onTrackTouchEnd}
-              onClick={(e) => {
-                // Если пользователь сделал свайп, не открываем ссылку.
-                if (trackDidSwipeRef.current) {
-                  e.preventDefault();
-                  trackDidSwipeRef.current = false;
-                }
-              }}
-            >
-              <Image
-                className="w-full h-full object-contain"
-                src={tracks[currentTrack]?.img ?? trackRKBP}
-                alt={tracks[currentTrack]?.alt ?? "Картинка трека"}
-              />
-            </Link>
+                <Link
+                    href={tracks[currentTrack]?.href ?? "/track"}
+                    className="relative flex-1 rounded-xl overflow-hidden ring-1 ring-black/5 hover:ring-black/10 transition-shadow touch-pan-y"
+                    aria-label={`Открыть: ${tracks[currentTrack]?.title ?? "трек"}`}
+                    onTouchStart={onTrackTouchStart}
+                    onTouchMove={onTrackTouchMove}
+                    onTouchEnd={onTrackTouchEnd}
+                    onClick={(e) => {
+                      // Если пользователь сделал свайп, не открываем ссылку.
+                      if (trackDidSwipeRef.current) {
+                        e.preventDefault();
+                        trackDidSwipeRef.current = false;
+                      }
+                    }}
+                >
+                  <Image
+                      className="w-full h-full object-contain"
+                      src={tracks[currentTrack]?.img ?? trackRKBP}
+                      alt={tracks[currentTrack]?.alt ?? "Картинка трека"}
+                  />
+                </Link>
 
-            <div className="flex items-center justify-center gap-2">
-              {tracks.map((t, idx) => (
-                <button
-                  key={t.href}
-                  type="button"
-                  onClick={() => setCurrentTrack(idx)}
-                  aria-label={`Перейти к: ${t.title}`}
-                  aria-pressed={currentTrack === idx}
-                  className={`h-2.5 rounded-full transition-all ${
-                    currentTrack === idx
-                      ? "w-6 bg-black/60"
-                      : "w-2.5 bg-black/20 hover:bg-black/30"
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
-          {/* <div
+                <div className="flex items-center justify-center gap-2">
+                  {tracks.map((t, idx) => (
+                      <button
+                          key={t.href}
+                          type="button"
+                          onClick={() => setCurrentTrack(idx)}
+                          aria-label={`Перейти к: ${t.title}`}
+                          aria-pressed={currentTrack === idx}
+                          className={`h-2.5 rounded-full transition-all ${
+                              currentTrack === idx
+                                  ? "w-6 bg-black/60"
+                                  : "w-2.5 bg-black/20 hover:bg-black/30"
+                          }`}
+                      />
+                  ))}
+                </div>
+              </div>
+              {/* <div
             onClick={() => setShow2(true)}
             className="flex-shrink-0 w-1/3 flex flex-col bg-white shadow-2xl rounded-xl p-4 cursor-pointer"
           >
@@ -244,72 +244,73 @@ export default function Home() {
               alt="Профессиональная сфера деятельности выпускника"
             />
           </div> */}
-          <div
-            onClick={() => {
-              setPresentationIndex(0);
-              setShowPresentation(true);
-            }}
-            className="flex-shrink-0 w-1/3 flex flex-col bg-white shadow-2xl rounded-xl p-4 cursor-pointer"
-          >
-            <PresentationSlider
-              images={presentationImages}
-              // title="Практическая деятельность кафедры"
+              <div
+                  onClick={() => {
+                    setPresentationIndex(0);
+                    setShowPresentation(true);
+                  }}
+                  className="flex-shrink-0 flex flex-col bg-white shadow-2xl rounded-xl p-4 cursor-pointer"
+              >
+                <PresentationSlider
+                    images={presentationImages}
+                    // title="Практическая деятельность кафедры"
+                />
+              </div>
+              <Link
+                  href={"/camera"}
+                  className="group flex-shrink-0 flex flex-col bg-white shadow-2xl rounded-xl p-4 gap-4 hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.35)] transition-shadow"
+              >
+                <p className="font-medium text-center text-xl">Определение профессии</p>
+                <div className="relative w-full flex-1 min-h-[210px] rounded-xl overflow-hidden bg-gradient-to-br from-[#e8f7f3] via-white to-[#f3f6ff] ring-1 ring-black/5">
+                  <Image
+                      src={scannerPreview}
+                      alt="Превью сканера профессии"
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
+                      priority
+                  />
+                </div>
+              </Link>
+            </div>
+          <div className="shrink-0 flex items-center gap-4">
+            <Image
+                className="w-[200px] object-contain brightness-[10000]"
+                src={logoKB}
+                alt="логотип"
             />
+            <div className="flex flex-col">
+              <p className="text-white font-semibold text-[36px]">
+                Кафедра КБ-9 “Предметно-ориентированные информационные системы”
+              </p>
+              <p className="text-white font-medium text-[28px]">
+                09.03.02 “Информационные системы и технологии”
+              </p>
+            </div>
           </div>
-          <Link
-            href={"/camera"}
-            className="group flex-shrink-0 w-1/3 flex flex-col bg-white shadow-2xl rounded-xl p-4 gap-4 hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.35)] transition-shadow"
-          >
-            <p className="font-medium text-center text-xl">Определение профессии</p>
-            <div className="relative w-full flex-1 min-h-[210px] rounded-xl overflow-hidden bg-gradient-to-br from-[#e8f7f3] via-white to-[#f3f6ff] ring-1 ring-black/5">
+
+          <div className="flex-1 min-h-0 w-full grid grid-cols-3 grid-rows-1 gap-8 overflow-hidden">
+            <div className="flex h-full bg-white shadow-2xl rounded-xl p-4">
+              <Video src={"/video.mp4"} />
+            </div>
+            <div
+                onClick={() => setShow3(true)}
+                className="h-full flex flex-col bg-white shadow-2xl rounded-xl p-4 cursor-pointer"
+            >
               <Image
-                src={scannerPreview}
-                alt="Превью сканера профессии"
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
-                priority
+                  className="w-full min-h-0 flex-1 object-contain"
+                  src={lesenka}
+                  alt="Картинка трека предметов"
               />
             </div>
-          </Link>
-        </div>
-        </div>
-        <div className="shrink-0 flex items-center gap-4">
-          <Image
-            className="w-[200px] object-contain brightness-[10000]"
-            src={logoKB}
-            alt="логотип"
-          />
-          <div className="flex flex-col">
-            <p className="text-white font-semibold text-[36px]">
-              Кафедра КБ-9 “Предметно-ориентированные информационные системы”
-            </p>
-            <p className="text-white font-medium text-[28px]">
-              09.03.02 “Информационные системы и технологии”
-            </p>
+
+            <div className="flex h-full flex-col bg-white shadow-2xl rounded-xl gap-4 p-4">
+              <Video src={"/TVP.MP4"} />
+            </div>
           </div>
         </div>
 
-        <div className="flex-1 w-full grid grid-cols-3 gap-8">
-          <div className="flex bg-white shadow-2xl rounded-xl p-4">
-            <Video src={"/video.mp4"} />
-          </div>
-          <div
-            onClick={() => setShow3(true)}
-            className="h-full flex flex-col bg-white shadow-2xl rounded-xl p-4 cursor-pointer"
-          >
-            <Image
-              className="w-full h-full object-contain"
-              src={lesenka}
-              alt="Картинка трека предметов"
-            />
-          </div>
-
-          <div className="flex flex-col bg-white shadow-2xl rounded-xl gap-4 p-4">
-            <Video src={"/TVP.MP4"} />
-          </div>
-        </div>
 
         {/* Portal navigation */}
-        <div className="shrink-0">
+        <div className="shrink-0 p-4 sm:p-6">
           <div className="mb-3">
             <h2 className="text-white font-semibold text-2xl mb-1">Перейти в систему</h2>
             <p className="text-gray-400 text-sm">

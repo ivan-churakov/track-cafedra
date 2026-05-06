@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { Teacher, RetakeSchedule, DutySchedule, CalendarEvent, CalendarEventType, KpkCourse } from '../../types';
 import { WeeklyCalendar } from '../../Components/Calendar/WeeklyCalendar';
+import { TelegramBotPopup } from '../../Components/TelegramBotPopup/TelegramBotPopup';
 
 interface RawScheduleEvent {
   id: string;
@@ -455,6 +456,7 @@ export default function StudentsPage({
           </div>
         )}
       </div>
+      <TelegramBotPopup />
     </div>
   );
 }

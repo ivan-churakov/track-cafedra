@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { Teacher, CalendarEvent, RetakeSchedule, DutySchedule } from '../../types';
 import { WeeklyCalendar } from '../../Components/Calendar/WeeklyCalendar';
+import { TelegramBotPopup } from '../../Components/TelegramBotPopup/TelegramBotPopup';
 
 interface Props {
   teachers: Teacher[];
@@ -230,6 +231,7 @@ export default function TeachersPage({ teachers, retakeSchedules, dutySchedules 
           </div>
         )}
       </div>
+      <TelegramBotPopup />
     </div>
   );
 }
