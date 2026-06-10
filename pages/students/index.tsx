@@ -1,27 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import fs from 'fs';
-import path from 'path';
-import { Teacher, RetakeSchedule, DutySchedule, CalendarEvent, CalendarEventType, KpkCourse } from '../../types';
+import { Teacher, RetakeSchedule, DutySchedule, CalendarEvent, CalendarEventType, ProfessionalDevelopment, ScheduleEvent } from '../../types';
 import { WeeklyCalendar } from '../../Components/Calendar/WeeklyCalendar';
 import { TelegramBotPopup } from '../../Components/TelegramBotPopup/TelegramBotPopup';
-
-interface RawScheduleEvent {
-  id: string;
-  title: string;
-  start: string;
-  end: string;
-  type: CalendarEventType;
-  location?: string;
-  description?: string;
-}
 
 interface Props {
   teachers: Teacher[];
   retakeSchedules: RetakeSchedule[];
   dutySchedules: DutySchedule[];
-  schedulesByTeacher: Record<string, RawScheduleEvent[]>;
-  kpkCoursesByTeacher: Record<string, KpkCourse[]>;
+  schedulesByTeacher: Record<string, ScheduleEvent[]>;
+  kpkByTeacher: Record<string, ProfessionalDevelopment[]>;
 }
 
 type Filter = 'all' | 'today' | 'duty' | 'retake';
@@ -75,7 +63,7 @@ export default function StudentsPage({
   retakeSchedules,
   dutySchedules,
   schedulesByTeacher,
-  kpkCoursesByTeacher,
+  kpkByTeacher,
 }: Props) {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
@@ -89,7 +77,7 @@ export default function StudentsPage({
     const statuses: Record<number, TeacherStatus> = {};
 
     for (const teacher of teachers) {
-      const raw = schedulesByTeacher[teacher.id] ?? [];
+      const raw: ScheduleEvent[] = schedulesByTeacher[teacher.id] ?? [];
       const retakes = retakeSchedules.filter(r => r.teacher_id === teacher.id);
       const duties = dutySchedules.filter(d => d.teacher_id === teacher.id);
 
@@ -99,7 +87,7 @@ export default function StudentsPage({
       const daysSet = new Set<string>();
 
       for (const e of raw) {
-        const d = new Date(e.start);
+        const d = new Date(e.start as string);
         if (isToday(d)) today = true;
         if (d >= week.start && d <= week.end) {
           const dow = DOW_NAMES[d.getDay()];
@@ -156,9 +144,9 @@ export default function StudentsPage({
       title: e.title,
       start: new Date(e.start),
       end: new Date(e.end),
-      type: e.type,
-      location: e.location,
-      description: e.description,
+      type: 'class' as CalendarEventType,
+      location: [e.building, e.auditorium].filter(Boolean).join(' / '),
+      description: e.groups?.join(', '),
     }));
     retakeSchedules
       .filter(r => r.teacher_id === selectedId)
@@ -167,10 +155,10 @@ export default function StudentsPage({
         const end = new Date(start.getTime() + r.duration_minutes * 60 * 1000);
         events.push({
           id: `retake-${r.id}`,
-          title: r.is_commission ? `[Комиссия] ${r.discipline_name}` : `[Пересдача] ${r.discipline_name}`,
+          title: r.is_commission ? `[Комиссия] ${r.subject_name}` : `[Пересдача] ${r.subject_name}`,
           start, end,
           type: r.is_commission ? 'commission' : 'retake',
-          location: r.auditorium,
+          location: [r.building, r.auditorium].filter(Boolean).join(' / '),
           description: r.comment || undefined,
         });
       });
@@ -183,16 +171,14 @@ export default function StudentsPage({
           start: new Date(d.start_datetime),
           end: new Date(d.end_datetime),
           type: 'duty',
-          location: d.auditorium,
+          location: [d.building, d.auditorium].filter(Boolean).join(' / '),
           description: d.comment || undefined,
         });
       });
     return events;
   }, [selectedId, schedulesByTeacher, retakeSchedules, dutySchedules]);
 
-  const selectedKpk = selectedId
-    ? (kpkCoursesByTeacher[selectedId] ?? []).filter(c => c.status === 'published')
-    : [];
+  const selectedKpk = selectedId ? (kpkByTeacher[selectedId] ?? []) : [];
   const selectedRetakes = selectedId
     ? retakeSchedules.filter(r => r.teacher_id === selectedId)
     : [];
@@ -277,7 +263,7 @@ export default function StudentsPage({
                         {shortName(teacher.full_name)}
                       </div>
                       <div className="text-gray-400 text-xs truncate mt-0.5">
-                        {[teacher.position, teacher.academic_degree].filter(Boolean).join(', ')}
+                        {[teacher.position, teacher.academic_degrees[0]].filter(Boolean).join(', ')}
                       </div>
                     </div>
                   </div>
@@ -332,8 +318,8 @@ export default function StudentsPage({
                     <div className="flex-1 min-w-0">
                       <h2 className="font-semibold text-lg leading-tight">{selectedTeacher.full_name}</h2>
                       <p className="text-gray-400 text-sm mt-0.5">{selectedTeacher.position}</p>
-                      {selectedTeacher.academic_degree && (
-                        <p className="text-gray-500 text-xs mt-0.5">{selectedTeacher.academic_degree}</p>
+                      {selectedTeacher.academic_degrees.length > 0 && (
+                        <p className="text-gray-500 text-xs mt-0.5">{selectedTeacher.academic_degrees.join(', ')}</p>
                       )}
                       <div className="flex flex-wrap gap-2 mt-3">
                         {teacherStatus[selectedTeacher.id]?.today && (
@@ -353,12 +339,6 @@ export default function StudentsPage({
                         )}
                       </div>
                     </div>
-                    <Link
-                      href={`/teachers/${selectedTeacher.id}`}
-                      className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors whitespace-nowrap flex-shrink-0"
-                    >
-                      Карточка →
-                    </Link>
                   </div>
                 </div>
 
@@ -370,17 +350,12 @@ export default function StudentsPage({
                       {selectedTeacher.email}
                     </a>
                   </div>
-                  {selectedTeacher.tg_username && (
-                    <div>
-                      <div className="text-gray-500 text-xs uppercase tracking-wide mb-1">Telegram</div>
-                      <span className="text-gray-300">{selectedTeacher.tg_username}</span>
-                    </div>
-                  )}
                   <div>
-                    <div className="text-gray-500 text-xs uppercase tracking-wide mb-1">Стаж преподавания</div>
+                    <div className="text-gray-500 text-xs uppercase tracking-wide mb-1">В МИРЭА с</div>
                     <span className="text-gray-300">
-                      с {selectedTeacher.teaching_experience} г.&nbsp;
-                      ({new Date().getFullYear() - selectedTeacher.teaching_experience} лет)
+                      {selectedTeacher.mirea_teaching_since
+                        ? new Date(selectedTeacher.mirea_teaching_since).getFullYear()
+                        : '—'} г.
                     </span>
                   </div>
                 </div>
@@ -394,13 +369,14 @@ export default function StudentsPage({
                         <div key={r.id} className="flex items-start gap-3 text-sm">
                           <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${r.is_commission ? 'bg-orange-400' : 'bg-red-400'}`} />
                           <div className="min-w-0">
-                            <div className="font-medium text-gray-200">{r.discipline_name}</div>
+                            <div className="font-medium text-gray-200">{r.subject_name}</div>
                             <div className="text-gray-400 text-xs">
                               {new Date(r.datetime).toLocaleString('ru-RU', {
                                 day: 'numeric', month: 'long',
                                 hour: '2-digit', minute: '2-digit',
                               })}
-                              {' · '}{r.auditorium}
+                              {r.building ? ` · ${r.building}` : ''}
+                              {r.auditorium ? `, ${r.auditorium}` : ''}
                               {r.is_commission && ' · Комиссия'}
                             </div>
                             {r.comment && (
@@ -422,14 +398,11 @@ export default function StudentsPage({
                     <div className="flex flex-col gap-2">
                       {selectedKpk.map(c => (
                         <div key={c.id} className="text-sm">
-                          <div className="font-medium text-gray-200">{c.title}</div>
+                          <div className="font-medium text-gray-200">{c.course_name}</div>
                           <div className="text-gray-400 text-xs mt-0.5">
                             {c.hours} ч.
-                            {c.format === 'online' ? ' · онлайн' : c.format === 'mixed' ? ' · смешанный' : ' · очно'}
-                            {c.startDate
-                              ? ` · начало ${new Date(c.startDate).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}`
-                              : ''}
-                            {c.room ? ` · ${c.room}` : ''}
+                            {c.issued_by ? ` · ${c.issued_by}` : ''}
+                            {c.issue_date ? ` · ${c.issue_date}` : ''}
                           </div>
                         </div>
                       ))}
@@ -461,38 +434,77 @@ export default function StudentsPage({
   );
 }
 
-export async function getStaticProps() {
-  const teachersData = require('../../public/teachers.json');
-  const schedulesData = require('../../public/retake_schedules.json');
-  const kpkData = require('../../public/kpk_courses.json');
+export async function getServerSideProps() {
+  const { teachers: teachersApi, retakes, duties, schedule: scheduleApi } = await import('../../lib/api');
 
-  const teachers: Teacher[] = teachersData.teachers;
-  const schedulesByTeacher: Record<string, RawScheduleEvent[]> = {};
+  try {
+    const [teachersData, retakesData, dutiesData] = await Promise.all([
+      teachersApi.list(),
+      retakes.list(),
+      duties.list(),
+    ]);
 
-  for (const teacher of teachers) {
-    try {
-      const filePath = path.join(process.cwd(), 'public', 'schedules', `${teacher.id}.json`);
-      const raw = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-      schedulesByTeacher[teacher.id] = raw.events ?? [];
-    } catch {
-      schedulesByTeacher[teacher.id] = [];
+    const teacherList: Teacher[] = teachersData.teachers;
+    const schedulesByTeacher: Record<string, ScheduleEvent[]> = {};
+    const kpkByTeacher: Record<string, ProfessionalDevelopment[]> = {};
+
+    await Promise.all(
+      teacherList.map(async (t) => {
+        try {
+          const s = await scheduleApi.get(t.id);
+          schedulesByTeacher[t.id] = s.events;
+        } catch {
+          schedulesByTeacher[t.id] = [];
+        }
+      }),
+    );
+
+    return {
+      props: {
+        teachers: teacherList,
+        retakeSchedules: retakesData.retake_schedules,
+        dutySchedules: dutiesData.duty_schedules,
+        schedulesByTeacher,
+        kpkByTeacher,
+      },
+    };
+  } catch {
+    // Fallback to static JSON while backend is unavailable
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const teachersData = require('../../public/teachers.json');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const schedulesData = require('../../public/retake_schedules.json');
+    const fs = require('fs');
+    const path = require('path');
+    const { transformTeacher } = await import('../../lib/mock-data');
+
+    const teacherList: Teacher[] = teachersData.teachers.map(transformTeacher);
+    const schedulesByTeacher: Record<string, ScheduleEvent[]> = {};
+    for (const teacher of teacherList) {
+      try {
+        const filePath = path.join(process.cwd(), 'public', 'schedules', `${teacher.id}.json`);
+        const raw = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+        schedulesByTeacher[teacher.id] = (raw.events ?? []).map((e: { id: string; title: string; start: string; end: string; building?: string; auditorium?: string; groups?: string[]; class_type_short?: string; class_type_full?: string }) => ({
+          id: e.id, title: e.title, start: e.start, end: e.end,
+          class_type_short: e.class_type_short ?? '',
+          class_type_full: e.class_type_full ?? '',
+          building: e.building ?? '',
+          auditorium: e.auditorium ?? '',
+          groups: e.groups ?? [],
+        }));
+      } catch {
+        schedulesByTeacher[teacher.id] = [];
+      }
     }
-  }
 
-  const kpkCoursesByTeacher: Record<string, KpkCourse[]> = {};
-  for (const course of kpkData.courses as KpkCourse[]) {
-    const key = String(course.teacherId);
-    if (!kpkCoursesByTeacher[key]) kpkCoursesByTeacher[key] = [];
-    kpkCoursesByTeacher[key].push(course);
+    return {
+      props: {
+        teachers: teacherList,
+        retakeSchedules: schedulesData.retake_schedules,
+        dutySchedules: schedulesData.duty_schedules,
+        schedulesByTeacher,
+        kpkByTeacher: {},
+      },
+    };
   }
-
-  return {
-    props: {
-      teachers,
-      retakeSchedules: schedulesData.retake_schedules,
-      dutySchedules: schedulesData.duty_schedules,
-      schedulesByTeacher,
-      kpkCoursesByTeacher,
-    },
-  };
 }

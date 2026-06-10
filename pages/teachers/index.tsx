@@ -15,11 +15,11 @@ function retakeToEvent(r: RetakeSchedule): CalendarEvent {
   const end = new Date(start.getTime() + r.duration_minutes * 60 * 1000);
   return {
     id: `retake-${r.id}`,
-    title: r.is_commission ? `[Комиссия] ${r.discipline_name}` : `[Пересдача] ${r.discipline_name}`,
+    title: r.is_commission ? `[Комиссия] ${r.subject_name}` : `[Пересдача] ${r.subject_name}`,
     start,
     end,
     type: r.is_commission ? 'commission' : 'retake',
-    location: r.auditorium,
+    location: [r.building, r.auditorium].filter(Boolean).join(' / '),
     description: r.comment || undefined,
   };
 }
@@ -31,7 +31,7 @@ function dutyToEvent(d: DutySchedule): CalendarEvent {
     start: new Date(d.start_datetime),
     end: new Date(d.end_datetime),
     type: 'duty',
-    location: d.auditorium,
+    location: [d.building, d.auditorium].filter(Boolean).join(' / '),
     description: d.comment || undefined,
   };
 }
@@ -140,8 +140,8 @@ export default function TeachersPage({ teachers, retakeSchedules, dutySchedules 
             <div className="flex-1 min-w-0">
               <div className="font-semibold text-lg">{selectedTeacher.full_name}</div>
               <div className="text-gray-400 text-sm">{selectedTeacher.position}</div>
-              {selectedTeacher.academic_degree && (
-                <div className="text-gray-500 text-xs mt-0.5">{selectedTeacher.academic_degree}</div>
+              {selectedTeacher.academic_degrees.length > 0 && (
+                <div className="text-gray-500 text-xs mt-0.5">{selectedTeacher.academic_degrees.join(', ')}</div>
               )}
             </div>
             <Link
@@ -206,8 +206,8 @@ export default function TeachersPage({ teachers, retakeSchedules, dutySchedules 
                       <div className="text-gray-400 text-xs truncate">{teacher.position}</div>
                     </div>
                   </div>
-                  {teacher.academic_degree && (
-                    <div className="text-gray-500 text-xs">{teacher.academic_degree}</div>
+                  {teacher.academic_degrees.length > 0 && (
+                    <div className="text-gray-500 text-xs">{teacher.academic_degrees.join(', ')}</div>
                   )}
                   <div className="flex gap-2 mt-3">
                     <button
@@ -236,15 +236,35 @@ export default function TeachersPage({ teachers, retakeSchedules, dutySchedules 
   );
 }
 
-export async function getStaticProps() {
-  const teachersData = require('../../public/teachers.json');
-  const schedulesData = require('../../public/retake_schedules.json');
+export async function getServerSideProps() {
+  const { teachers: teachersApi, retakes, duties } = await import('../../lib/api');
 
-  return {
-    props: {
-      teachers: teachersData.teachers,
-      retakeSchedules: schedulesData.retake_schedules,
-      dutySchedules: schedulesData.duty_schedules,
-    },
-  };
+  try {
+    const [teachersData, retakesData, dutiesData] = await Promise.all([
+      teachersApi.list(),
+      retakes.list(),
+      duties.list(),
+    ]);
+    return {
+      props: {
+        teachers: teachersData.teachers,
+        retakeSchedules: retakesData.retake_schedules,
+        dutySchedules: dutiesData.duty_schedules,
+      },
+    };
+  } catch {
+    // Fallback to static JSON while backend is unavailable
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const teachersData = require('../../public/teachers.json');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const schedulesData = require('../../public/retake_schedules.json');
+    const { transformTeacher } = await import('../../lib/mock-data');
+    return {
+      props: {
+        teachers: teachersData.teachers.map(transformTeacher),
+        retakeSchedules: schedulesData.retake_schedules,
+        dutySchedules: schedulesData.duty_schedules,
+      },
+    };
+  }
 }

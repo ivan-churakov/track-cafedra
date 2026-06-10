@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "Bash(npx tsc *)",
+      "Bash(New-Item -ItemType Directory -Force \"C:\\\\Users\\\\IvanChurakov\\\\Documents\\\\Projects\\\\track-cafedra\\\\pages\\\\api\\\\reports\")",
+      "Bash(Out-Null)"
     ]
   }
 }

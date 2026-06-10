@@ -4,6 +4,7 @@ import { Track } from "../Components/SVGTrack/Track";
 
 describe("Track component", () => {
   test("renders without crashing", () => {
-    render(<Track />);
+    const emptyTopics = { red: [], green: [], blue: [], orange: [] };
+    render(<Track topics={emptyTopics} variant="1" />);
   });
 });

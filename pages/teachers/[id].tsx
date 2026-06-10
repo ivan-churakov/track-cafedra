@@ -1,25 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { GetStaticPaths, GetStaticProps } from 'next';
-import { Teacher, CalendarEvent, CalendarEventType, RetakeSchedule, DutySchedule } from '../../types';
+import { GetServerSideProps } from 'next';
+import { teachers as teachersApi, retakes as retakesApi, duties as dutiesApi, schedule as scheduleApi } from '../../lib/api';
+import type { Teacher, CalendarEvent, CalendarEventType, RetakeSchedule, DutySchedule, ScheduleEvent } from '../../types';
 import { WeeklyCalendar } from '../../Components/Calendar/WeeklyCalendar';
-import { fetchICalEvents } from '../../utils/ical';
-
-interface RawScheduleEvent {
-  id: string;
-  title: string;
-  start: string;
-  end: string;
-  type: CalendarEventType;
-  location?: string;
-  description?: string;
-}
 
 interface Props {
   teacher: Teacher;
   retakeSchedules: RetakeSchedule[];
   dutySchedules: DutySchedule[];
-  scheduleEvents: RawScheduleEvent[];
+  scheduleEvents: ScheduleEvent[];
 }
 
 function retakeToEvent(r: RetakeSchedule): CalendarEvent {
@@ -27,11 +17,10 @@ function retakeToEvent(r: RetakeSchedule): CalendarEvent {
   const end = new Date(start.getTime() + r.duration_minutes * 60 * 1000);
   return {
     id: `retake-${r.id}`,
-    title: r.is_commission ? `[Комиссия] ${r.discipline_name}` : `[Пересдача] ${r.discipline_name}`,
-    start,
-    end,
-    type: r.is_commission ? 'commission' : 'retake',
-    location: r.auditorium,
+    title: r.is_commission ? `[Комиссия] ${r.subject_name}` : `[Пересдача] ${r.subject_name}`,
+    start, end,
+    type: r.is_commission ? 'commission' : ('retake' as CalendarEventType),
+    location: [r.building, r.auditorium].filter(Boolean).join(' / '),
     description: r.comment || undefined,
   };
 }
@@ -43,66 +32,82 @@ function dutyToEvent(d: DutySchedule): CalendarEvent {
     start: new Date(d.start_datetime),
     end: new Date(d.end_datetime),
     type: 'duty',
-    location: d.auditorium,
+    location: [d.building, d.auditorium].filter(Boolean).join(' / '),
     description: d.comment || undefined,
   };
 }
 
-function getExperience(startYear: number): number {
-  return new Date().getFullYear() - startYear;
+function scheduleToCalendar(e: ScheduleEvent): CalendarEvent {
+  return {
+    id: e.id,
+    title: e.title,
+    start: new Date(e.start),
+    end: new Date(e.end),
+    type: 'class',
+    location: [e.building, e.auditorium].filter(Boolean).join(' / '),
+    description: e.groups?.join(', '),
+  };
 }
 
-function getDegreeLevel(degree: string | null): { label: string; color: string } | null {
-  if (!degree) return null;
-  const d = degree.toLowerCase();
+function totalExperience(teacher: Teacher): number {
+  const mireaSince = teacher.mirea_teaching_since
+    ? new Date().getFullYear() - new Date(teacher.mirea_teaching_since).getFullYear()
+    : 0;
+  return Math.floor(teacher.teaching_years_before_mirea) + mireaSince;
+}
+
+function pluralYears(n: number): string {
+  if (n % 100 >= 11 && n % 100 <= 19) return 'лет';
+  if (n % 10 === 1) return 'год';
+  if (n % 10 >= 2 && n % 10 <= 4) return 'года';
+  return 'лет';
+}
+
+function getDegreeLevel(degrees: string[]): { label: string; color: string } | null {
+  if (degrees.length === 0) return null;
+  const d = degrees[0].toLowerCase();
   if (d.includes('доктор')) return { label: 'Доктор наук', color: 'text-yellow-400' };
-  if (d.includes('кандидат')) return { label: 'Кандидат наук', color: 'text-cyan-400' };
-  return { label: degree, color: 'text-gray-300' };
+  if (d.includes('д.') || d.includes('д-р')) return { label: 'Доктор наук', color: 'text-yellow-400' };
+  if (d.includes('кандидат') || d.includes('к.')) return { label: 'Кандидат наук', color: 'text-cyan-400' };
+  return { label: degrees[0], color: 'text-gray-300' };
 }
 
-export default function TeacherProfilePage({ teacher, retakeSchedules, dutySchedules, scheduleEvents }: Props) {
-  const preloadedEvents = useMemo((): CalendarEvent[] =>
-    scheduleEvents.map((e) => ({
-      ...e,
-      start: new Date(e.start),
-      end: new Date(e.end),
-    })),
-    [scheduleEvents]
+export default function TeacherProfilePage({
+  teacher,
+  retakeSchedules,
+  dutySchedules,
+  scheduleEvents,
+}: Props) {
+  const preloadedEvents = useMemo(
+    (): CalendarEvent[] => scheduleEvents.map(scheduleToCalendar),
+    [scheduleEvents],
   );
 
-  const [icalEvents, setIcalEvents] = useState<CalendarEvent[]>(preloadedEvents);
-  const [icalStatus, setIcalStatus] = useState<'idle' | 'loading' | 'success' | 'error'>(
-    scheduleEvents.length > 0 ? 'success' : 'idle'
-  );
-
-  useEffect(() => {
-    if (scheduleEvents.length > 0 || !teacher.schedule_url) return;
-
-    setIcalStatus('loading');
-    fetchICalEvents(teacher.schedule_url)
-      .then((events) => {
-        setIcalEvents(events);
-        setIcalStatus('success');
-      })
-      .catch(() => {
-        setIcalStatus('error');
-      });
-  }, [teacher.schedule_url, scheduleEvents.length]);
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>(preloadedEvents);
 
   const allEvents = useMemo((): CalendarEvent[] => {
-    const retakes = retakeSchedules.map(retakeToEvent);
-    const duties = dutySchedules.map(dutyToEvent);
-    return [...icalEvents, ...retakes, ...duties];
-  }, [icalEvents, retakeSchedules, dutySchedules]);
+    return [
+      ...calendarEvents,
+      ...retakeSchedules.map(retakeToEvent),
+      ...dutySchedules.map(dutyToEvent),
+    ];
+  }, [calendarEvents, retakeSchedules, dutySchedules]);
 
-  const experience = getExperience(teacher.teaching_experience);
-  const degreeInfo = getDegreeLevel(teacher.academic_degree);
+  const experience = totalExperience(teacher);
+  const degreeInfo = getDegreeLevel(teacher.academic_degrees);
+  const mireasInception = teacher.mirea_teaching_since
+    ? new Date(teacher.mirea_teaching_since).getFullYear()
+    : null;
 
   const initials = teacher.full_name
     .split(' ')
-    .map((n) => n[0])
+    .map(n => n[0])
     .join('')
     .slice(0, 2);
+
+  const photoSrc = teacher.photo_download_url
+    ? `${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080'}${teacher.photo_download_url}`
+    : null;
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
@@ -124,10 +129,10 @@ export default function TeacherProfilePage({ teacher, retakeSchedules, dutySched
             <div className="bg-gray-800 rounded-2xl border border-gray-700 p-6">
               {/* Photo / Avatar */}
               <div className="flex justify-center mb-5">
-                {teacher.photo_url ? (
+                {photoSrc ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={teacher.photo_url}
+                    src={photoSrc}
                     alt={teacher.full_name}
                     className="w-32 h-32 rounded-2xl object-cover"
                   />
@@ -138,30 +143,22 @@ export default function TeacherProfilePage({ teacher, retakeSchedules, dutySched
                 )}
               </div>
 
-              {/* Name */}
               <h1 className="text-xl font-bold text-center mb-1 leading-tight">
                 {teacher.full_name}
               </h1>
               <p className="text-gray-400 text-sm text-center mb-5">{teacher.position}</p>
 
-              {/* Stats */}
               <div className="space-y-3">
                 {/* Experience */}
                 <div className="bg-gray-700/50 rounded-xl p-3">
                   <div className="text-xs text-gray-500 mb-1">Педагогический стаж</div>
                   <div className="text-lg font-bold">
                     {experience}{' '}
-                    <span className="text-sm font-normal text-gray-400">
-                      {experience % 100 >= 11 && experience % 100 <= 19
-                        ? 'лет'
-                        : experience % 10 === 1
-                        ? 'год'
-                        : experience % 10 >= 2 && experience % 10 <= 4
-                        ? 'года'
-                        : 'лет'}
-                    </span>
+                    <span className="text-sm font-normal text-gray-400">{pluralYears(experience)}</span>
                   </div>
-                  <div className="text-xs text-gray-500">с {teacher.teaching_experience} года</div>
+                  {mireasInception && (
+                    <div className="text-xs text-gray-500">в МИРЭА с {mireasInception} г.</div>
+                  )}
                 </div>
 
                 {/* Academic degree */}
@@ -171,54 +168,50 @@ export default function TeacherProfilePage({ teacher, retakeSchedules, dutySched
                     <div className={`font-semibold text-sm ${degreeInfo.color}`}>
                       {degreeInfo.label}
                     </div>
-                    <div className="text-xs text-gray-400 mt-0.5">{teacher.academic_degree}</div>
+                    <div className="text-xs text-gray-400 mt-0.5">
+                      {teacher.academic_degrees.join(', ')}
+                    </div>
                   </div>
                 )}
 
-                {/* Academic title */}
-                {teacher.academic_title && (
+                {/* Academic titles */}
+                {teacher.academic_titles.length > 0 && (
                   <div className="bg-gray-700/50 rounded-xl p-3">
                     <div className="text-xs text-gray-500 mb-1">Учёное звание</div>
                     <div className="font-semibold text-sm text-gray-200">
-                      {teacher.academic_title}
+                      {teacher.academic_titles.join(', ')}
                     </div>
                   </div>
                 )}
 
                 {/* Contacts */}
-                <div className="bg-gray-700/50 rounded-xl p-3 space-y-2">
-                  <div className="text-xs text-gray-500 mb-1">Контакты</div>
-                  {teacher.email && (
+                {teacher.email && (
+                  <div className="bg-gray-700/50 rounded-xl p-3">
+                    <div className="text-xs text-gray-500 mb-1">Контакты</div>
                     <a
                       href={`mailto:${teacher.email}`}
                       className="flex items-center gap-2 text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
                     >
                       <span>✉</span> {teacher.email}
                     </a>
-                  )}
-                  {teacher.tg_username && (
-                    <a
-                      href={`https://t.me/${teacher.tg_username.replace('@', '')}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center gap-2 text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
-                    >
-                      <span>✈</span> {teacher.tg_username}
-                    </a>
-                  )}
-                </div>
+                    {teacher.tg_username && (
+                      <div className="text-sm text-gray-400 mt-1">{teacher.tg_username}</div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Education */}
-            {teacher.educations && teacher.educations.length > 0 && (
+            {teacher.educations.length > 0 && (
               <div className="bg-gray-800 rounded-2xl border border-gray-700 p-6 mt-4">
                 <h2 className="font-semibold mb-3 text-sm text-gray-300">Образование</h2>
-                <ul className="space-y-2">
+                <ul className="space-y-3">
                   {teacher.educations.map((edu, i) => (
-                    <li key={i} className="flex gap-2 text-sm text-gray-400">
-                      <span className="text-cyan-600 mt-0.5 flex-shrink-0">•</span>
-                      <span>{edu}</span>
+                    <li key={i} className="text-sm text-gray-400">
+                      <div className="text-gray-300 font-medium">{edu.specialty}</div>
+                      <div>{edu.institution}</div>
+                      <div className="text-xs text-gray-500">{edu.level} · {edu.graduation_year}</div>
                     </li>
                   ))}
                 </ul>
@@ -231,37 +224,15 @@ export default function TeacherProfilePage({ teacher, retakeSchedules, dutySched
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">Расписание</h2>
               {teacher.schedule_url && (
-                <div className="flex items-center gap-2">
-                  {icalStatus === 'loading' && (
-                    <span className="text-xs text-gray-500">Загрузка расписания...</span>
-                  )}
-                  {icalStatus === 'success' && (
-                    <span className="text-xs text-green-500">✓ Расписание загружено</span>
-                  )}
-                  {icalStatus === 'error' && (
-                    <span className="text-xs text-yellow-500">
-                      ⚠ Не удалось загрузить iCal (CORS)
-                    </span>
-                  )}
-                  <a
-                    href={teacher.schedule_url}
-                    className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
-                    title="Добавить в Google Calendar"
-                  >
-                    📅 Google Calendar
-                  </a>
-                </div>
+                <a
+                  href={teacher.schedule_url}
+                  className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+                  title="Добавить в Google Calendar"
+                >
+                  📅 Google Calendar
+                </a>
               )}
             </div>
-
-            {icalStatus === 'error' && (
-              <div className="mb-4 bg-yellow-900/20 border border-yellow-700/50 rounded-xl p-4 text-sm text-yellow-400">
-                <strong>Не удалось загрузить расписание занятий</strong> из-за ограничений CORS.
-                <br />
-                Вы можете добавить расписание в Google Calendar по ссылке выше.
-                Ниже показаны только пересдачи и дежурства.
-              </div>
-            )}
 
             <WeeklyCalendar events={allEvents} />
           </div>
@@ -271,38 +242,27 @@ export default function TeacherProfilePage({ teacher, retakeSchedules, dutySched
   );
 }
 
-export const getStaticPaths: GetStaticPaths = async () => {
-  const teachersData = require('../../public/teachers.json');
-  const paths = teachersData.teachers.map((t: Teacher) => ({
-    params: { id: t.id.toString() },
-  }));
-  return { paths, fallback: false };
-};
+export const getServerSideProps: GetServerSideProps = async ({ params }) => {
+  const id = Number(params?.id);
+  if (!id) return { notFound: true };
 
-export const getStaticProps: GetStaticProps = async ({ params }) => {
-  const teachersData = require('../../public/teachers.json');
-  const schedulesData = require('../../public/retake_schedules.json');
-
-  const teacher = teachersData.teachers.find(
-    (t: Teacher) => t.id.toString() === params?.id
-  );
-
-  if (!teacher) return { notFound: true };
-
-  const retakeSchedules = schedulesData.retake_schedules.filter(
-    (r: RetakeSchedule) => r.teacher_id === teacher.id
-  );
-  const dutySchedules = schedulesData.duty_schedules.filter(
-    (d: DutySchedule) => d.teacher_id === teacher.id
-  );
-
-  let scheduleEvents: RawScheduleEvent[] = [];
   try {
-    const data = require(`../../public/schedules/${teacher.id}.json`);
-    scheduleEvents = data.events || [];
-  } catch {}
+    const [teacher, retakesData, dutiesData, scheduleData] = await Promise.all([
+      teachersApi.get(id),
+      retakesApi.list(id),
+      dutiesApi.list(id),
+      scheduleApi.get(id),
+    ]);
 
-  return {
-    props: { teacher, retakeSchedules, dutySchedules, scheduleEvents },
-  };
+    return {
+      props: {
+        teacher,
+        retakeSchedules: retakesData.retake_schedules,
+        dutySchedules: dutiesData.duty_schedules,
+        scheduleEvents: scheduleData.events,
+      },
+    };
+  } catch {
+    return { notFound: true };
+  }
 };
