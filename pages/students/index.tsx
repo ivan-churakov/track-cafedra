@@ -434,7 +434,7 @@ export default function StudentsPage({
   );
 }
 
-export async function getServerSideProps() {
+export async function getStaticProps() {
   const { teachers: teachersApi, retakes, duties, schedule: scheduleApi } = await import('../../lib/api');
 
   try {
@@ -470,9 +470,7 @@ export async function getServerSideProps() {
     };
   } catch {
     // Fallback to static JSON while backend is unavailable
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const teachersData = require('../../public/teachers.json');
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const schedulesData = require('../../public/retake_schedules.json');
     const fs = require('fs');
     const path = require('path');

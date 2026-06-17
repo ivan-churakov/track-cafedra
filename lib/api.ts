@@ -88,6 +88,46 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Скачивание файла с защищённого эндпоинта. Bearer-токен backend принимает только
+ * в заголовке Authorization (не в query), поэтому прямой `<a href>` в новой вкладке
+ * получает 401 — качаем fetch'ем с заголовком и отдаём как blob.
+ */
+export async function downloadAuthed(pathOrUrl: string, filename: string): Promise<void> {
+  const url = pathOrUrl.startsWith('http') ? pathOrUrl : `${BASE_URL}${pathOrUrl}`;
+  const token = getToken();
+  const res = await fetch(url, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) {
+    throw new ApiError(res.status, res.statusText);
+  }
+  const blob = await res.blob();
+  const objectUrl = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = objectUrl;
+  link.download = filenameFromDisposition(res.headers.get('content-disposition')) ?? filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(objectUrl);
+}
+
+/** Достаёт имя файла из заголовка Content-Disposition (поддерживает RFC 5987 filename*). */
+function filenameFromDisposition(header: string | null): string | undefined {
+  if (!header) return undefined;
+  const star = /filename\*=UTF-8''([^;]+)/i.exec(header);
+  if (star) {
+    try {
+      return decodeURIComponent(star[1]);
+    } catch {
+      /* fall through */
+    }
+  }
+  const plain = /filename="?([^";]+)"?/i.exec(header);
+  return plain ? plain[1] : undefined;
+}
+
 function qs(params: Record<string, string | number | undefined>): string {
   const entries = Object.entries(params).filter(([, v]) => v !== undefined);
   if (entries.length === 0) return '';
@@ -277,8 +317,7 @@ export const profDev = {
   },
 
   archiveUrl(teacherId: number): string {
-    const token = getToken();
-    return `${BASE_URL}/api/professional-developments/archive?teacherId=${teacherId}${token ? `&token=${token}` : ''}`;
+    return `${BASE_URL}/api/professional-developments/archive?teacherId=${teacherId}`;
   },
 
   scanUrl(id: number): string {
@@ -322,7 +361,7 @@ export const studyPlans = {
 
 export const trackApi = {
   list(study_plan_id?: number): Promise<{ tracks: Track[] }> {
-    return publicFetch(`/api/tracks${qs({ study_plan_id })}`);
+    return publicFetch(`/api/tracks${qs({ studyPlanId: study_plan_id })}`);
   },
 
   get(id: number): Promise<Track> {
@@ -392,8 +431,7 @@ export const reports = {
   },
 
   retakesExcelUrl(semester: 'current' | 'previous' = 'current'): string {
-    const token = getToken();
-    return `${BASE_URL}/api/reports/retakes.xlsx?semester=${semester}${token ? `&token=${token}` : ''}`;
+    return `${BASE_URL}/api/reports/retakes.xlsx?semester=${semester}`;
   },
 };
 

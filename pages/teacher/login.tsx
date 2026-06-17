@@ -25,7 +25,10 @@ export default function TeacherLoginPage() {
   const [regSuccess, setRegSuccess] = useState(false);
 
   useEffect(() => {
-    if (getToken()) {
+    const stored =
+      localStorage.getItem('teacher_auth') ||
+      sessionStorage.getItem('teacher_auth');
+    if (getToken() && stored) {
       router.replace('/teacher/dashboard');
     }
   }, [router]);

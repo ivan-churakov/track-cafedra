@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-const TG_BOT_URL = 'https://t.me/placeholder_bot';
+const TG_BOT_URL = 'https://t.me/kb9_pois_bot';
 
 export function TelegramBotPopup() {
   const [closed, setClosed] = useState(false);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { GetServerSideProps } from 'next';
+import { GetStaticProps, GetStaticPaths } from 'next';
 import { teachers as teachersApi, retakes as retakesApi, duties as dutiesApi, schedule as scheduleApi } from '../../lib/api';
 import type { Teacher, CalendarEvent, CalendarEventType, RetakeSchedule, DutySchedule, ScheduleEvent } from '../../types';
 import { WeeklyCalendar } from '../../Components/Calendar/WeeklyCalendar';
@@ -242,7 +242,24 @@ export default function TeacherProfilePage({
   );
 }
 
-export const getServerSideProps: GetServerSideProps = async ({ params }) => {
+export const getStaticPaths: GetStaticPaths = async () => {
+  let ids: number[];
+  try {
+    const { teachers } = await teachersApi.list();
+    ids = teachers.map((t) => t.id);
+  } catch {
+    // Fallback to static JSON while backend is unavailable
+    const data = require('../../public/teachers.json');
+    ids = data.teachers.map((t: { id: number }) => t.id);
+  }
+
+  return {
+    paths: ids.map((id) => ({ params: { id: String(id) } })),
+    fallback: false,
+  };
+};
+
+export const getStaticProps: GetStaticProps = async ({ params }) => {
   const id = Number(params?.id);
   if (!id) return { notFound: true };
 

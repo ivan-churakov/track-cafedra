@@ -7,9 +7,11 @@ import {
   duties as dutiesApi,
   profDev,
   teachers as teachersApi,
+  directories,
   ApiError,
   getToken,
   removeToken,
+  downloadAuthed,
 } from '../../lib/api';
 import type {
   Teacher,
@@ -18,6 +20,7 @@ import type {
   RetakeSchedule,
   RetakeCreatePayload,
   DutySchedule,
+  DutyCreatePayload,
   ProfessionalDevelopment,
   ProfDevCreatePayload,
   CalendarEvent,
@@ -25,7 +28,12 @@ import type {
 } from '../../types';
 import { WeeklyCalendar } from '../../Components/Calendar/WeeklyCalendar';
 
-type Tab = 'schedule' | 'kpk' | 'retakes' | 'profile';
+type Tab = 'schedule' | 'kpk' | 'retakes' | 'duties' | 'profile';
+
+/** "2026-02-15T14:00:00" → "2026-02-15T14:00" для <input type="datetime-local">. */
+function toDatetimeLocal(value: string): string {
+  return value ? value.slice(0, 16) : '';
+}
 
 interface AuthData {
   teacherId: number;
@@ -145,6 +153,11 @@ export default function TeacherDashboard() {
   const [retakesList, setRetakesList] = useState<RetakeSchedule[]>([]);
   const [dutiesList, setDutiesList] = useState<DutySchedule[]>([]);
 
+  // Directories
+  const [subjectOptions, setSubjectOptions] = useState<string[]>([]);
+  const [buildingOptions, setBuildingOptions] = useState<string[]>([]);
+  const [docTypeOptions, setDocTypeOptions] = useState<string[]>([]);
+
   // Loading states
   const [scheduleLoading, setScheduleLoading] = useState(false);
   const [kpkLoading, setKpkLoading] = useState(false);
@@ -157,9 +170,11 @@ export default function TeacherDashboard() {
   const [kpkForm, setKpkForm] = useState<Partial<ProfDevCreatePayload>>({
     course_name: '', hours: 36, document_name: '', document_number: '', issued_by: '', issue_date: '',
   });
+  const [kpkScanFile, setKpkScanFile] = useState<File | null>(null);
 
   // Retake form
   const [showAddRetake, setShowAddRetake] = useState(false);
+  const [editingRetakeId, setEditingRetakeId] = useState<number | null>(null);
   const [retakeSaving, setRetakeSaving] = useState(false);
   const [retakeError, setRetakeError] = useState('');
   const [retakeDiscipline, setRetakeDiscipline] = useState('');
@@ -169,6 +184,17 @@ export default function TeacherDashboard() {
   const [retakeDuration, setRetakeDuration] = useState(90);
   const [retakeIsCommission, setRetakeIsCommission] = useState(false);
   const [retakeComment, setRetakeComment] = useState('');
+
+  // Duty form
+  const [showAddDuty, setShowAddDuty] = useState(false);
+  const [editingDutyId, setEditingDutyId] = useState<number | null>(null);
+  const [dutySaving, setDutySaving] = useState(false);
+  const [dutyError, setDutyError] = useState('');
+  const [dutyStart, setDutyStart] = useState('');
+  const [dutyEnd, setDutyEnd] = useState('');
+  const [dutyBuilding, setDutyBuilding] = useState('');
+  const [dutyAuditorium, setDutyAuditorium] = useState('');
+  const [dutyComment, setDutyComment] = useState('');
 
   // Profile edit
   const [profileEditing, setProfileEditing] = useState(false);
@@ -188,23 +214,37 @@ export default function TeacherDashboard() {
 
   // Auth check
   useEffect(() => {
-    if (!getToken()) {
+    const bounce = () => {
+      // Clear stale credentials so /teacher/login does not redirect back here (infinite loop)
+      removeToken();
+      localStorage.removeItem('teacher_auth');
+      sessionStorage.removeItem('teacher_auth');
       router.replace('/teacher/login');
+    };
+
+    if (!getToken()) {
+      bounce();
       return;
     }
     const stored =
       localStorage.getItem('teacher_auth') ||
       sessionStorage.getItem('teacher_auth');
     if (!stored) {
-      router.replace('/teacher/login');
+      bounce();
       return;
     }
     try {
       setAuthData(JSON.parse(stored));
     } catch {
-      router.replace('/teacher/login');
+      bounce();
     }
   }, [router]);
+
+  useEffect(() => {
+    directories.subjects().then(d => setSubjectOptions(d.subjects.map(s => s.name))).catch(() => {});
+    directories.buildings().then(d => setBuildingOptions(d.buildings.map(b => b.code))).catch(() => {});
+    directories.documentTypes().then(d => setDocTypeOptions(d.document_types.map(dt => dt.name))).catch(() => {});
+  }, []);
 
   const loadAll = useCallback(async (teacherId: number) => {
     setScheduleLoading(true);
@@ -269,8 +309,14 @@ export default function TeacherDashboard() {
         issue_date: kpkForm.issue_date ?? '',
       };
       const created = await profDev.create(payload);
-      setKpkList(prev => [...prev, created]);
+      if (kpkScanFile) {
+        const withScan = await profDev.uploadScan(created.id, kpkScanFile);
+        setKpkList(prev => [...prev, withScan]);
+      } else {
+        setKpkList(prev => [...prev, created]);
+      }
       setKpkForm({ course_name: '', hours: 36, document_name: '', document_number: '', issued_by: '', issue_date: '' });
+      setKpkScanFile(null);
       setShowAddKpk(false);
     } catch (err) {
       setKpkError(err instanceof ApiError ? err.message : 'Ошибка сохранения');
@@ -288,37 +334,71 @@ export default function TeacherDashboard() {
     }
   };
 
-  const handleAddRetake = async () => {
+  const resetRetakeForm = () => {
+    setRetakeDiscipline('');
+    setRetakeDates(['']);
+    setRetakeBuilding('');
+    setRetakeAuditorium('');
+    setRetakeDuration(90);
+    setRetakeIsCommission(false);
+    setRetakeComment('');
+    setEditingRetakeId(null);
+    setRetakeError('');
+    setShowAddRetake(false);
+  };
+
+  const startEditRetake = (r: RetakeSchedule) => {
+    setEditingRetakeId(r.id);
+    setRetakeDiscipline(r.subject_name);
+    setRetakeDates([toDatetimeLocal(r.datetime)]);
+    setRetakeBuilding(r.building ?? '');
+    setRetakeAuditorium(r.auditorium ?? '');
+    setRetakeDuration(r.duration_minutes ?? 90);
+    setRetakeIsCommission(r.is_commission);
+    setRetakeComment(r.comment ?? '');
+    setRetakeError('');
+    setShowAddRetake(true);
+  };
+
+  const handleSubmitRetake = async () => {
     if (!authData || !retakeDiscipline.trim()) return;
     const validDates = retakeDates.filter(d => d.trim());
     if (validDates.length === 0) return;
     setRetakeSaving(true);
     setRetakeError('');
     try {
-      const created: RetakeSchedule[] = [];
-      for (const dt of validDates) {
+      if (editingRetakeId != null) {
         const payload: RetakeCreatePayload = {
           teacher_id: authData.teacherId,
           subject_name: retakeDiscipline.trim(),
-          datetime: dt,
+          datetime: validDates[0],
           comment: retakeComment,
           building: retakeBuilding,
           auditorium: retakeAuditorium,
           duration_minutes: retakeDuration,
           is_commission: retakeIsCommission,
         };
-        const r = await retakesApi.create(payload);
-        created.push(r);
+        const updated = await retakesApi.update(editingRetakeId, payload);
+        setRetakesList(prev => prev.map(r => (r.id === editingRetakeId ? updated : r)));
+      } else {
+        const created: RetakeSchedule[] = [];
+        for (const dt of validDates) {
+          const payload: RetakeCreatePayload = {
+            teacher_id: authData.teacherId,
+            subject_name: retakeDiscipline.trim(),
+            datetime: dt,
+            comment: retakeComment,
+            building: retakeBuilding,
+            auditorium: retakeAuditorium,
+            duration_minutes: retakeDuration,
+            is_commission: retakeIsCommission,
+          };
+          const r = await retakesApi.create(payload);
+          created.push(r);
+        }
+        setRetakesList(prev => [...prev, ...created]);
       }
-      setRetakesList(prev => [...prev, ...created]);
-      setRetakeDiscipline('');
-      setRetakeDates(['']);
-      setRetakeBuilding('');
-      setRetakeAuditorium('');
-      setRetakeDuration(90);
-      setRetakeIsCommission(false);
-      setRetakeComment('');
-      setShowAddRetake(false);
+      resetRetakeForm();
     } catch (err) {
       setRetakeError(err instanceof ApiError ? err.message : 'Ошибка сохранения');
     } finally {
@@ -330,6 +410,70 @@ export default function TeacherDashboard() {
     try {
       await retakesApi.delete(id);
       setRetakesList(prev => prev.filter(r => r.id !== id));
+    } catch (err) {
+      alert(err instanceof ApiError ? err.message : 'Ошибка удаления');
+    }
+  };
+
+  // ── Дежурства ──────────────────────────────────────────────────────────────
+  const resetDutyForm = () => {
+    setDutyStart('');
+    setDutyEnd('');
+    setDutyBuilding('');
+    setDutyAuditorium('');
+    setDutyComment('');
+    setEditingDutyId(null);
+    setDutyError('');
+    setShowAddDuty(false);
+  };
+
+  const startEditDuty = (d: DutySchedule) => {
+    setEditingDutyId(d.id);
+    setDutyStart(toDatetimeLocal(d.start_datetime));
+    setDutyEnd(toDatetimeLocal(d.end_datetime));
+    setDutyBuilding(d.building ?? '');
+    setDutyAuditorium(d.auditorium ?? '');
+    setDutyComment(d.comment ?? '');
+    setDutyError('');
+    setShowAddDuty(true);
+  };
+
+  const handleSubmitDuty = async () => {
+    if (!authData || !dutyStart || !dutyEnd) return;
+    if (dutyEnd <= dutyStart) {
+      setDutyError('Окончание должно быть позже начала');
+      return;
+    }
+    setDutySaving(true);
+    setDutyError('');
+    try {
+      const payload: DutyCreatePayload = {
+        teacher_id: authData.teacherId,
+        start_datetime: dutyStart,
+        end_datetime: dutyEnd,
+        building: dutyBuilding,
+        auditorium: dutyAuditorium,
+        comment: dutyComment,
+      };
+      if (editingDutyId != null) {
+        const updated = await dutiesApi.update(editingDutyId, payload);
+        setDutiesList(prev => prev.map(d => (d.id === editingDutyId ? updated : d)));
+      } else {
+        const created = await dutiesApi.create(payload);
+        setDutiesList(prev => [...prev, created]);
+      }
+      resetDutyForm();
+    } catch (err) {
+      setDutyError(err instanceof ApiError ? err.message : 'Ошибка сохранения');
+    } finally {
+      setDutySaving(false);
+    }
+  };
+
+  const handleDeleteDuty = async (id: number) => {
+    try {
+      await dutiesApi.delete(id);
+      setDutiesList(prev => prev.filter(d => d.id !== id));
     } catch (err) {
       alert(err instanceof ApiError ? err.message : 'Ошибка удаления');
     }
@@ -447,6 +591,7 @@ export default function TeacherDashboard() {
             { key: 'schedule', label: '📅 Расписание' },
             { key: 'kpk', label: '🎓 КПК' },
             { key: 'retakes', label: '📝 Пересдачи' },
+            { key: 'duties', label: '🛡️ Дежурства' },
             { key: 'profile', label: '👤 Профиль' },
           ] as { key: Tab; label: string }[]).map(t => (
             <button
@@ -505,14 +650,17 @@ export default function TeacherDashboard() {
                         {k.issue_date ? ` · ${k.issue_date}` : ''}
                       </div>
                       {k.scan_download_url && (
-                        <a
-                          href={`${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080'}${k.scan_download_url}`}
-                          target="_blank"
-                          rel="noreferrer"
+                        <button
+                          type="button"
+                          onClick={() =>
+                            downloadAuthed(k.scan_download_url!, `Скан_КПК_${k.id}`).catch(() =>
+                              alert('Не удалось скачать скан документа.'),
+                            )
+                          }
                           className="text-xs text-cyan-400 hover:text-cyan-300 mt-1 inline-block"
                         >
                           Скан документа ↓
-                        </a>
+                        </button>
                       )}
                     </div>
                     <button
@@ -560,13 +708,14 @@ export default function TeacherDashboard() {
                   </div>
                   <div>
                     <label className="block text-xs text-gray-400 mb-1">Вид документа</label>
-                    <input
-                      type="text"
+                    <select
                       value={kpkForm.document_name ?? ''}
                       onChange={e => setKpkForm(f => ({ ...f, document_name: e.target.value }))}
-                      placeholder="Удостоверение о повышении квалификации"
-                      className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-2 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-cyan-500"
-                    />
+                      className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-cyan-500"
+                    >
+                      <option value="">— не указан —</option>
+                      {docTypeOptions.map(d => <option key={d} value={d}>{d}</option>)}
+                    </select>
                   </div>
                   <div>
                     <label className="block text-xs text-gray-400 mb-1">Номер документа</label>
@@ -588,6 +737,16 @@ export default function TeacherDashboard() {
                       className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-2 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-cyan-500"
                     />
                   </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs text-gray-400 mb-1">Скан документа (pdf/jpg/png, необязательно)</label>
+                    <input
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      onChange={e => setKpkScanFile(e.target.files?.[0] ?? null)}
+                      className="w-full text-xs text-gray-400 file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-gray-700 file:text-gray-200 hover:file:bg-gray-600"
+                    />
+                    {kpkScanFile && <p className="text-xs text-cyan-400 mt-1">{kpkScanFile.name}</p>}
+                  </div>
                 </div>
 
                 {kpkError && (
@@ -598,7 +757,7 @@ export default function TeacherDashboard() {
 
                 <div className="flex justify-end gap-3">
                   <button
-                    onClick={() => setShowAddKpk(false)}
+                    onClick={() => { setShowAddKpk(false); setKpkScanFile(null); }}
                     className="text-sm text-gray-400 hover:text-white px-4 py-2 transition-colors"
                   >
                     Отмена
@@ -624,7 +783,7 @@ export default function TeacherDashboard() {
                 График пересдач ({retakesLoading ? '...' : retakesList.length})
               </h2>
               <button
-                onClick={() => { setShowAddRetake(v => !v); setRetakeError(''); }}
+                onClick={() => { if (showAddRetake) { resetRetakeForm(); } else { resetRetakeForm(); setShowAddRetake(true); } }}
                 className="bg-cyan-500 hover:bg-cyan-400 text-white text-sm font-medium px-4 py-1.5 rounded-lg transition-colors"
               >
                 + Добавить
@@ -660,12 +819,20 @@ export default function TeacherDashboard() {
                       </div>
                       {r.comment && <div className="text-xs text-gray-500 mt-1">{r.comment}</div>}
                     </div>
-                    <button
-                      onClick={() => handleDeleteRetake(r.id)}
-                      className="text-xs text-red-400 hover:text-red-300 transition-colors flex-shrink-0"
-                    >
-                      Удалить
-                    </button>
+                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                      <button
+                        onClick={() => startEditRetake(r)}
+                        className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+                      >
+                        Изменить
+                      </button>
+                      <button
+                        onClick={() => handleDeleteRetake(r.id)}
+                        className="text-xs text-red-400 hover:text-red-300 transition-colors"
+                      >
+                        Удалить
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -673,14 +840,16 @@ export default function TeacherDashboard() {
 
             {showAddRetake && (
               <div className="bg-gray-800 rounded-xl p-5 border border-cyan-500/30 flex flex-col gap-4">
-                <h3 className="text-sm font-semibold text-gray-300">Новая пересдача</h3>
+                <h3 className="text-sm font-semibold text-gray-300">
+                  {editingRetakeId != null ? 'Редактирование пересдачи' : 'Новая пересдача'}
+                </h3>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="sm:col-span-2">
                     <label className="block text-xs text-gray-400 mb-1">Дисциплина *</label>
                     <SubjectCombobox
                       value={retakeDiscipline}
                       onChange={setRetakeDiscipline}
-                      options={[]}
+                      options={subjectOptions}
                       placeholder="Введите или выберите дисциплину"
                     />
                   </div>
@@ -711,25 +880,28 @@ export default function TeacherDashboard() {
                           )}
                         </div>
                       ))}
-                      <button
-                        type="button"
-                        onClick={() => setRetakeDates([...retakeDates, ''])}
-                        className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors text-left"
-                      >
-                        + Добавить дату
-                      </button>
+                      {editingRetakeId == null && (
+                        <button
+                          type="button"
+                          onClick={() => setRetakeDates([...retakeDates, ''])}
+                          className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors text-left"
+                        >
+                          + Добавить дату
+                        </button>
+                      )}
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-xs text-gray-400 mb-1">Корпус</label>
-                    <input
-                      type="text"
+                    <select
                       value={retakeBuilding}
                       onChange={e => setRetakeBuilding(e.target.value)}
-                      placeholder="В-78"
-                      className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-2 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-cyan-500"
-                    />
+                      className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-cyan-500"
+                    >
+                      <option value="">— не указан —</option>
+                      {buildingOptions.map(b => <option key={b} value={b}>{b}</option>)}
+                    </select>
                   </div>
                   <div>
                     <label className="block text-xs text-gray-400 mb-1">Аудитория</label>
@@ -781,17 +953,163 @@ export default function TeacherDashboard() {
 
                 <div className="flex justify-end gap-3">
                   <button
-                    onClick={() => setShowAddRetake(false)}
+                    onClick={resetRetakeForm}
                     className="text-sm text-gray-400 hover:text-white px-4 py-2 transition-colors"
                   >
                     Отмена
                   </button>
                   <button
-                    onClick={handleAddRetake}
+                    onClick={handleSubmitRetake}
                     disabled={retakeSaving}
                     className="bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
                   >
-                    {retakeSaving ? 'Сохранение...' : `Добавить (${retakeDates.filter(d => d).length} дат)`}
+                    {retakeSaving
+                      ? 'Сохранение...'
+                      : editingRetakeId != null
+                        ? 'Сохранить'
+                        : `Добавить (${retakeDates.filter(d => d).length} дат)`}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Tab: Duties */}
+        {tab === 'duties' && (
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-semibold text-gray-300">
+                Дежурства ({retakesLoading ? '...' : dutiesList.length})
+              </h2>
+              <button
+                onClick={() => { if (showAddDuty) { resetDutyForm(); } else { resetDutyForm(); setShowAddDuty(true); } }}
+                className="bg-cyan-500 hover:bg-cyan-400 text-white text-sm font-medium px-4 py-1.5 rounded-lg transition-colors"
+              >
+                + Добавить
+              </button>
+            </div>
+
+            {retakesLoading ? (
+              <div className="text-gray-400 text-sm py-8 text-center">Загрузка...</div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {dutiesList.length === 0 && (
+                  <div className="text-center text-gray-500 py-8">Нет запланированных дежурств</div>
+                )}
+                {dutiesList.map(d => (
+                  <div key={d.id} className="bg-gray-800 rounded-xl p-4 border border-gray-700 flex items-start gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-gray-200">
+                        {new Date(d.start_datetime).toLocaleString('ru-RU', {
+                          day: 'numeric', month: 'long', year: 'numeric',
+                          hour: '2-digit', minute: '2-digit',
+                        })}
+                        {' — '}
+                        {new Date(d.end_datetime).toLocaleTimeString('ru-RU', {
+                          hour: '2-digit', minute: '2-digit',
+                        })}
+                      </div>
+                      <div className="text-sm text-gray-400 mt-1">
+                        {d.building ? d.building : '—'}
+                        {d.auditorium ? `, ${d.auditorium}` : ''}
+                      </div>
+                      {d.comment && <div className="text-xs text-gray-500 mt-1">{d.comment}</div>}
+                    </div>
+                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                      <button
+                        onClick={() => startEditDuty(d)}
+                        className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+                      >
+                        Изменить
+                      </button>
+                      <button
+                        onClick={() => handleDeleteDuty(d.id)}
+                        className="text-xs text-red-400 hover:text-red-300 transition-colors"
+                      >
+                        Удалить
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {showAddDuty && (
+              <div className="bg-gray-800 rounded-xl p-5 border border-cyan-500/30 flex flex-col gap-4">
+                <h3 className="text-sm font-semibold text-gray-300">
+                  {editingDutyId != null ? 'Редактирование дежурства' : 'Новое дежурство'}
+                </h3>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Начало *</label>
+                    <input
+                      type="datetime-local"
+                      value={dutyStart}
+                      onChange={e => setDutyStart(e.target.value)}
+                      className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-cyan-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Окончание *</label>
+                    <input
+                      type="datetime-local"
+                      value={dutyEnd}
+                      onChange={e => setDutyEnd(e.target.value)}
+                      className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-cyan-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Корпус</label>
+                    <select
+                      value={dutyBuilding}
+                      onChange={e => setDutyBuilding(e.target.value)}
+                      className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-cyan-500"
+                    >
+                      <option value="">— не указан —</option>
+                      {buildingOptions.map(b => <option key={b} value={b}>{b}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Аудитория</label>
+                    <input
+                      type="text"
+                      value={dutyAuditorium}
+                      onChange={e => setDutyAuditorium(e.target.value)}
+                      placeholder="А-101"
+                      className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-2 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-cyan-500"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs text-gray-400 mb-1">Комментарий</label>
+                    <textarea
+                      value={dutyComment}
+                      onChange={e => setDutyComment(e.target.value)}
+                      rows={2}
+                      className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-2 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-cyan-500 resize-none"
+                    />
+                  </div>
+                </div>
+
+                {dutyError && (
+                  <p className="text-sm text-red-400 bg-red-900/20 border border-red-900/50 rounded-xl px-4 py-2">
+                    {dutyError}
+                  </p>
+                )}
+
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={resetDutyForm}
+                    className="text-sm text-gray-400 hover:text-white px-4 py-2 transition-colors"
+                  >
+                    Отмена
+                  </button>
+                  <button
+                    onClick={handleSubmitDuty}
+                    disabled={dutySaving}
+                    className="bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+                  >
+                    {dutySaving ? 'Сохранение...' : editingDutyId != null ? 'Сохранить' : 'Добавить'}
                   </button>
                 </div>
               </div>
