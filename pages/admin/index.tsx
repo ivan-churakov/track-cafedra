@@ -986,7 +986,6 @@ function ReportsSection() {
   const [dateTo, setDateTo] = useState('');
   const [downloadingExcel, setDownloadingExcel] = useState(false);
   const [downloadingKpk, setDownloadingKpk] = useState(false);
-  const [downloadingPersonnel, setDownloadingPersonnel] = useState(false);
 
   const handleDownloadExcel = async () => {
     setDownloadingExcel(true);
@@ -1038,41 +1037,6 @@ function ReportsSection() {
     }
   };
 
-  const handleDownloadPersonnel = async () => {
-    setDownloadingPersonnel(true);
-    try {
-      const data = await reports.personnelSummary({
-        from: dateFrom || undefined,
-        to: dateTo || undefined,
-      });
-      const lines = [
-        data.department,
-        `Сформировано: ${new Date(data.generated_at).toLocaleString('ru-RU')}`,
-        `Период: ${data.period_from} — ${data.period_to}`,
-        '',
-        `Всего преподавателей: ${data.summary.total_teachers}`,
-        `Со степенью: ${data.summary.with_degree_count} (${data.summary.with_degree_percent}%)`,
-        `Средний стаж: ${data.summary.avg_experience_years} лет`,
-        `Активных КПК: ${data.summary.active_kpk_count}`,
-        '',
-        ...data.teachers.map(
-          t =>
-            `${t.teacher_full_name} | ${t.position} | ${t.academic_degree || '—'} | стаж ${t.experience_years} лет | КПК: ${t.kpk_status} | след. КПК: ${t.next_pd_due ?? '—'} (${t.days_until_next_pd ?? '?'} дн.)`,
-        ),
-      ];
-      const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = 'Кадровая_справка.txt';
-      link.click();
-      URL.revokeObjectURL(link.href);
-    } catch {
-      alert('Не удалось получить кадровую справку.');
-    } finally {
-      setDownloadingPersonnel(false);
-    }
-  };
-
   return (
     <div className="max-w-2xl space-y-8">
       {/* Date range filter */}
@@ -1108,26 +1072,14 @@ function ReportsSection() {
         </div>
       </div>
 
-      {/* KPK summary */}
+      {/* KPK report */}
       <div>
-        <h2 className="text-lg font-semibold mb-4">Сводка по КПК</h2>
+        <h2 className="text-lg font-semibold mb-4">Отчет КПК</h2>
         <div className="bg-gray-800 rounded-xl border border-gray-700 p-5">
           <p className="text-sm text-gray-400 mb-4">TXT-файл из API бекенда.</p>
           <button onClick={handleDownloadKpk} disabled={downloadingKpk}
             className="flex items-center gap-2 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white text-sm font-medium px-5 py-2.5 rounded-xl transition-colors">
-            {downloadingKpk ? 'Загрузка...' : 'Скачать КПК сводку ↓'}
-          </button>
-        </div>
-      </div>
-
-      {/* Personnel summary */}
-      <div>
-        <h2 className="text-lg font-semibold mb-4">Кадровая справка</h2>
-        <div className="bg-gray-800 rounded-xl border border-gray-700 p-5">
-          <p className="text-sm text-gray-400 mb-4">Сводка по всем преподавателям с данными о стаже и КПК.</p>
-          <button onClick={handleDownloadPersonnel} disabled={downloadingPersonnel}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-sm font-medium px-5 py-2.5 rounded-xl transition-colors">
-            {downloadingPersonnel ? 'Загрузка...' : 'Скачать кадровую справку ↓'}
+            {downloadingKpk ? 'Загрузка...' : 'Скачать отчет КПК ↓'}
           </button>
         </div>
       </div>

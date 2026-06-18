@@ -187,7 +187,7 @@ export function WeeklyCalendar({ events }: WeeklyCalendarProps) {
       </div>
 
       {/* Calendar grid */}
-      <div className="flex overflow-x-auto">
+      <div className="flex">
         {/* Time column */}
         <div className="flex-shrink-0 w-14 border-r border-gray-700">
           <div className="h-10 border-b border-gray-700" />

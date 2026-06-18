@@ -25,6 +25,9 @@ import type {
   ProfDevCreatePayload,
   CalendarEvent,
   CalendarEventType,
+  Position,
+  AcademicTitle,
+  AcademicDegree,
 } from '../../types';
 import { WeeklyCalendar } from '../../Components/Calendar/WeeklyCalendar';
 
@@ -157,6 +160,9 @@ export default function TeacherDashboard() {
   const [subjectOptions, setSubjectOptions] = useState<string[]>([]);
   const [buildingOptions, setBuildingOptions] = useState<string[]>([]);
   const [docTypeOptions, setDocTypeOptions] = useState<string[]>([]);
+  const [positionOptions, setPositionOptions] = useState<Position[]>([]);
+  const [titleOptions, setTitleOptions] = useState<AcademicTitle[]>([]);
+  const [degreeOptions, setDegreeOptions] = useState<AcademicDegree[]>([]);
 
   // Loading states
   const [scheduleLoading, setScheduleLoading] = useState(false);
@@ -165,6 +171,7 @@ export default function TeacherDashboard() {
 
   // KPK form
   const [showAddKpk, setShowAddKpk] = useState(false);
+  const [editingKpkId, setEditingKpkId] = useState<number | null>(null);
   const [kpkSaving, setKpkSaving] = useState(false);
   const [kpkError, setKpkError] = useState('');
   const [kpkForm, setKpkForm] = useState<Partial<ProfDevCreatePayload>>({
@@ -205,8 +212,8 @@ export default function TeacherDashboard() {
   const [profFirstName, setProfFirstName] = useState('');
   const [profMiddleName, setProfMiddleName] = useState('');
   const [profPosition, setProfPosition] = useState('');
-  const [profDegrees, setProfDegrees] = useState('');
-  const [profTitles, setProfTitles] = useState('');
+  const [profDegrees, setProfDegrees] = useState<string[]>([]);
+  const [profTitles, setProfTitles] = useState<string[]>([]);
   const [profMireaSince, setProfMireaSince] = useState('');
   const [profBeforeYears, setProfBeforeYears] = useState(0);
   const [profBeforeMonths, setProfBeforeMonths] = useState(0);
@@ -244,6 +251,9 @@ export default function TeacherDashboard() {
     directories.subjects().then(d => setSubjectOptions(d.subjects.map(s => s.name))).catch(() => {});
     directories.buildings().then(d => setBuildingOptions(d.buildings.map(b => b.code))).catch(() => {});
     directories.documentTypes().then(d => setDocTypeOptions(d.document_types.map(dt => dt.name))).catch(() => {});
+    directories.positions().then(d => setPositionOptions(d.positions)).catch(() => {});
+    directories.academicTitles().then(d => setTitleOptions(d.academic_titles)).catch(() => {});
+    directories.academicDegrees().then(d => setDegreeOptions(d.academic_degrees)).catch(() => {});
   }, []);
 
   const loadAll = useCallback(async (teacherId: number) => {
@@ -253,6 +263,7 @@ export default function TeacherDashboard() {
 
     scheduleApi.get(teacherId)
       .then(d => setScheduleEvents(d.events))
+      .catch(() => setScheduleEvents([]))
       .finally(() => setScheduleLoading(false));
 
     profDev.list({ teacherId })
@@ -273,8 +284,8 @@ export default function TeacherDashboard() {
       setProfFirstName(t.first_name);
       setProfMiddleName(t.middle_name);
       setProfPosition(t.position);
-      setProfDegrees(t.academic_degrees.join(', '));
-      setProfTitles(t.academic_titles.join(', '));
+      setProfDegrees(t.academic_degrees);
+      setProfTitles(t.academic_titles);
       setProfMireaSince(t.mirea_teaching_since);
       setProfBeforeYears(Math.floor(t.teaching_years_before_mirea));
       setProfBeforeMonths(Math.round((t.teaching_years_before_mirea % 1) * 12));
@@ -294,6 +305,29 @@ export default function TeacherDashboard() {
     ];
   }, [scheduleEvents, retakesList, dutiesList]);
 
+  const resetKpkForm = () => {
+    setKpkForm({ course_name: '', hours: 36, document_name: '', document_number: '', issued_by: '', issue_date: '' });
+    setKpkScanFile(null);
+    setEditingKpkId(null);
+    setKpkError('');
+    setShowAddKpk(false);
+  };
+
+  const startEditKpk = (k: ProfessionalDevelopment) => {
+    setEditingKpkId(k.id);
+    setKpkForm({
+      course_name: k.course_name,
+      hours: k.hours,
+      document_name: k.document_name,
+      document_number: k.document_number,
+      issued_by: k.issued_by,
+      issue_date: k.issue_date,
+    });
+    setKpkScanFile(null);
+    setKpkError('');
+    setShowAddKpk(true);
+  };
+
   const handleAddKpk = async () => {
     if (!authData || !kpkForm.course_name?.trim()) return;
     setKpkSaving(true);
@@ -308,16 +342,22 @@ export default function TeacherDashboard() {
         issued_by: kpkForm.issued_by ?? '',
         issue_date: kpkForm.issue_date ?? '',
       };
-      const created = await profDev.create(payload);
-      if (kpkScanFile) {
-        const withScan = await profDev.uploadScan(created.id, kpkScanFile);
-        setKpkList(prev => [...prev, withScan]);
+      if (editingKpkId != null) {
+        let updated = await profDev.update(editingKpkId, payload);
+        if (kpkScanFile) {
+          updated = await profDev.uploadScan(editingKpkId, kpkScanFile);
+        }
+        setKpkList(prev => prev.map(k => (k.id === editingKpkId ? updated : k)));
       } else {
-        setKpkList(prev => [...prev, created]);
+        const created = await profDev.create(payload);
+        if (kpkScanFile) {
+          const withScan = await profDev.uploadScan(created.id, kpkScanFile);
+          setKpkList(prev => [...prev, withScan]);
+        } else {
+          setKpkList(prev => [...prev, created]);
+        }
       }
-      setKpkForm({ course_name: '', hours: 36, document_name: '', document_number: '', issued_by: '', issue_date: '' });
-      setKpkScanFile(null);
-      setShowAddKpk(false);
+      resetKpkForm();
     } catch (err) {
       setKpkError(err instanceof ApiError ? err.message : 'Ошибка сохранения');
     } finally {
@@ -479,6 +519,16 @@ export default function TeacherDashboard() {
     }
   };
 
+  const addProfChip = (kind: 'degrees' | 'titles', v: string) => {
+    if (!v) return;
+    const setter = kind === 'degrees' ? setProfDegrees : setProfTitles;
+    setter(prev => (prev.includes(v) ? prev : [...prev, v]));
+  };
+  const removeProfChip = (kind: 'degrees' | 'titles', v: string) => {
+    const setter = kind === 'degrees' ? setProfDegrees : setProfTitles;
+    setter(prev => prev.filter(x => x !== v));
+  };
+
   const handleSaveProfile = async () => {
     if (!authData || !teacher) return;
     setProfileSaving(true);
@@ -489,8 +539,8 @@ export default function TeacherDashboard() {
       first_name: profFirstName.trim(),
       middle_name: profMiddleName.trim(),
       position: profPosition.trim(),
-      academic_degrees: profDegrees ? profDegrees.split(',').map(s => s.trim()).filter(Boolean) : [],
-      academic_titles: profTitles ? profTitles.split(',').map(s => s.trim()).filter(Boolean) : [],
+      academic_degrees: profDegrees,
+      academic_titles: profTitles,
       email: teacher.email,
       mirea_teaching_since: profMireaSince,
       before_mirea_years: profBeforeYears,
@@ -625,7 +675,7 @@ export default function TeacherDashboard() {
                 Повышение квалификации ({kpkLoading ? '...' : kpkList.length})
               </h2>
               <button
-                onClick={() => { setShowAddKpk(v => !v); setKpkError(''); }}
+                onClick={() => { resetKpkForm(); setShowAddKpk(true); }}
                 className="bg-cyan-500 hover:bg-cyan-400 text-white text-sm font-medium px-4 py-1.5 rounded-lg transition-colors"
               >
                 + Добавить
@@ -663,20 +713,45 @@ export default function TeacherDashboard() {
                         </button>
                       )}
                     </div>
-                    <button
-                      onClick={() => handleDeleteKpk(k.id)}
-                      className="text-xs text-red-400 hover:text-red-300 transition-colors flex-shrink-0"
-                    >
-                      Удалить
-                    </button>
+                    <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => startEditKpk(k)}
+                        className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+                      >
+                        Изменить
+                      </button>
+                      <button
+                        onClick={() => handleDeleteKpk(k.id)}
+                        className="text-xs text-red-400 hover:text-red-300 transition-colors"
+                      >
+                        Удалить
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
             )}
 
             {showAddKpk && (
-              <div className="bg-gray-800 rounded-xl p-5 border border-cyan-500/30 flex flex-col gap-4">
-                <h3 className="text-sm font-semibold text-gray-300">Новая запись КПК</h3>
+              <div
+                className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4"
+                onClick={resetKpkForm}
+              >
+                <div
+                  className="w-full max-w-lg bg-gray-800 rounded-2xl border border-gray-700 p-6 max-h-[90vh] overflow-y-auto flex flex-col gap-4"
+                  onClick={e => e.stopPropagation()}
+                >
+                <div className="flex items-center justify-between">
+                  <h3 className="text-base font-semibold text-gray-200">
+                    {editingKpkId != null ? 'Редактирование записи КПК' : 'Новая запись КПК'}
+                  </h3>
+                  <button
+                    onClick={resetKpkForm}
+                    className="text-gray-500 hover:text-white transition-colors text-xl"
+                  >
+                    ✕
+                  </button>
+                </div>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="sm:col-span-2">
                     <label className="block text-xs text-gray-400 mb-1">Название курса *</label>
@@ -738,7 +813,9 @@ export default function TeacherDashboard() {
                     />
                   </div>
                   <div className="sm:col-span-2">
-                    <label className="block text-xs text-gray-400 mb-1">Скан документа (pdf/jpg/png, необязательно)</label>
+                    <label className="block text-xs text-gray-400 mb-1">
+                      {editingKpkId != null ? 'Заменить скан документа (pdf/jpg/png, необязательно)' : 'Скан документа (pdf/jpg/png, необязательно)'}
+                    </label>
                     <input
                       type="file"
                       accept=".pdf,.jpg,.jpeg,.png"
@@ -757,7 +834,7 @@ export default function TeacherDashboard() {
 
                 <div className="flex justify-end gap-3">
                   <button
-                    onClick={() => { setShowAddKpk(false); setKpkScanFile(null); }}
+                    onClick={resetKpkForm}
                     className="text-sm text-gray-400 hover:text-white px-4 py-2 transition-colors"
                   >
                     Отмена
@@ -767,8 +844,9 @@ export default function TeacherDashboard() {
                     disabled={kpkSaving}
                     className="bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
                   >
-                    {kpkSaving ? 'Сохранение...' : 'Добавить'}
+                    {kpkSaving ? 'Сохранение...' : editingKpkId != null ? 'Сохранить' : 'Добавить'}
                   </button>
+                </div>
                 </div>
               </div>
             )}
@@ -1216,16 +1294,55 @@ export default function TeacherDashboard() {
                     </div>
                     <div>
                       <label className="block text-xs text-gray-400 mb-1">Должность</label>
-                      <input value={profPosition} onChange={e => setProfPosition(e.target.value)} className={inputClass} placeholder="Доцент" />
+                      <select value={profPosition} onChange={e => setProfPosition(e.target.value)} className={inputClass}>
+                        <option value="">— не указана —</option>
+                        {positionOptions.map(p => (
+                          <option key={p.id} value={p.name}>{p.name}</option>
+                        ))}
+                      </select>
                     </div>
                     <div className="grid sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-xs text-gray-400 mb-1">Учёные степени (через запятую)</label>
-                        <input value={profDegrees} onChange={e => setProfDegrees(e.target.value)} className={inputClass} placeholder="к.т.н." />
+                        <label className="block text-xs text-gray-400 mb-1">Учёные степени</label>
+                        <select
+                          value=""
+                          onChange={e => { addProfChip('degrees', e.target.value); e.target.value = ''; }}
+                          className={inputClass}
+                        >
+                          <option value="">+ добавить степень</option>
+                          {degreeOptions.map(d => (
+                            <option key={d.short_name} value={d.short_name}>{d.short_name} — {d.full_name}</option>
+                          ))}
+                        </select>
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {profDegrees.map(d => (
+                            <span key={d} className="text-xs bg-gray-700 text-gray-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+                              {d}
+                              <button type="button" onClick={() => removeProfChip('degrees', d)} className="text-gray-400 hover:text-red-400">✕</button>
+                            </span>
+                          ))}
+                        </div>
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-400 mb-1">Учёные звания (через запятую)</label>
-                        <input value={profTitles} onChange={e => setProfTitles(e.target.value)} className={inputClass} placeholder="доц." />
+                        <label className="block text-xs text-gray-400 mb-1">Учёные звания (необязательно)</label>
+                        <select
+                          value=""
+                          onChange={e => { addProfChip('titles', e.target.value); e.target.value = ''; }}
+                          className={inputClass}
+                        >
+                          <option value="">+ добавить звание</option>
+                          {titleOptions.map(t => (
+                            <option key={t.short_name} value={t.short_name}>{t.short_name} — {t.full_name}</option>
+                          ))}
+                        </select>
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {profTitles.map(t => (
+                            <span key={t} className="text-xs bg-gray-700 text-gray-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+                              {t}
+                              <button type="button" onClick={() => removeProfChip('titles', t)} className="text-gray-400 hover:text-red-400">✕</button>
+                            </span>
+                          ))}
+                        </div>
                       </div>
                     </div>
                     <div>
