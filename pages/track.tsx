@@ -2,14 +2,28 @@ import * as React from "react";
 import { GetStaticProps } from "next";
 import { Track } from "../Components/SVGTrack/Track";
 import type { Topic, Discipline } from "../Components/SVGTrack/Track";
-import type { CurriculumEntry } from "../types";
 import { studyPlans } from "../lib/api";
 
 const STUDY_PLAN_ID = Number(process.env.NEXT_PUBLIC_STUDY_PLAN_ID_1 ?? 1);
 
-function entryToDiscipline(e: CurriculumEntry): Discipline {
+/**
+ * Форма позиции учебного плана из эндпоинта GET /api/study-plans/{id}/tracks.
+ * Название дисциплины приходит в поле `title` (StudyPlanTrackService.toTopic),
+ * а не `name`, как в /api/curriculum-entries.
+ */
+type TrackTopicEntry = {
+  title?: string;
+  semesters?: number[];
+  exam_semesters?: number[];
+  credit_semesters?: number[];
+  credit_units?: number;
+  lecture_hours?: number;
+  practice_hours?: number;
+};
+
+function entryToDiscipline(e: TrackTopicEntry): Discipline {
   return {
-    title: e.name ?? '',
+    title: e.title ?? '',
     exam: (e.exam_semesters ?? []).map(s => `${s} сем.`).join(', '),
     test: (e.credit_semesters ?? []).map(s => `${s} сем.`).join(', '),
     creditUnit: String(e.credit_units ?? ''),
