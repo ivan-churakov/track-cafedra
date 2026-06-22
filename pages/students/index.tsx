@@ -1,16 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { Teacher, RetakeSchedule, DutySchedule, CalendarEvent, CalendarEventType, ProfessionalDevelopment, ScheduleEvent } from '../../types';
+import {
+  teachers as teachersApi,
+  retakes as retakesApi,
+  duties as dutiesApi,
+  schedule as scheduleApi,
+} from '../../lib/api';
 import { WeeklyCalendar } from '../../Components/Calendar/WeeklyCalendar';
 import { TelegramBotPopup } from '../../Components/TelegramBotPopup/TelegramBotPopup';
-
-interface Props {
-  teachers: Teacher[];
-  retakeSchedules: RetakeSchedule[];
-  dutySchedules: DutySchedule[];
-  schedulesByTeacher: Record<string, ScheduleEvent[]>;
-  kpkByTeacher: Record<string, ProfessionalDevelopment[]>;
-}
 
 type Filter = 'all' | 'today' | 'duty' | 'retake';
 
@@ -58,18 +56,62 @@ function isToday(date: Date): boolean {
 
 const DOW_NAMES = ['', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'];
 
-export default function StudentsPage({
-  teachers,
-  retakeSchedules,
-  dutySchedules,
-  schedulesByTeacher,
-  kpkByTeacher,
-}: Props) {
+export default function StudentsPage() {
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [retakeSchedules, setRetakeSchedules] = useState<RetakeSchedule[]>([]);
+  const [dutySchedules, setDutySchedules] = useState<DutySchedule[]>([]);
+  const [schedulesByTeacher, setSchedulesByTeacher] = useState<Record<string, ScheduleEvent[]>>({});
+  // Студенты анонимны, а КПК требует авторизации — поэтому здесь не загружается.
+  const kpkByTeacher: Record<string, ProfessionalDevelopment[]> = {};
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [showDetail, setShowDetail] = useState(false);
   const [teacherStatus, setTeacherStatus] = useState<Record<number, TeacherStatus>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+
+    (async () => {
+      try {
+        const [teachersData, retakesData, dutiesData] = await Promise.all([
+          teachersApi.list(),
+          retakesApi.list(),
+          dutiesApi.list(),
+        ]);
+        if (cancelled) return;
+
+        setTeachers(teachersData.teachers);
+        setRetakeSchedules(retakesData.retake_schedules);
+        setDutySchedules(dutiesData.duty_schedules);
+
+        // Расписание каждого преподавателя — параллельно; ошибка по одному не валит остальных.
+        const byTeacher: Record<string, ScheduleEvent[]> = {};
+        await Promise.all(
+          teachersData.teachers.map(async (t) => {
+            try {
+              const s = await scheduleApi.get(t.id);
+              byTeacher[t.id] = s.events;
+            } catch {
+              byTeacher[t.id] = [];
+            }
+          }),
+        );
+        if (!cancelled) setSchedulesByTeacher(byTeacher);
+      } catch {
+        if (!cancelled) setError('Не удалось загрузить данные с сервера');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     const now = new Date();
@@ -234,6 +276,15 @@ export default function StudentsPage({
             ))}
           </div>
         </div>
+
+        {loading && (
+          <div className="text-gray-500 text-sm">Загрузка данных с сервера...</div>
+        )}
+        {error && (
+          <div className="text-red-400 text-sm bg-red-900/20 border border-red-900/50 rounded-xl px-4 py-2">
+            {error}
+          </div>
+        )}
 
         {/* Two-panel layout */}
         <div className="flex gap-6">
@@ -432,77 +483,4 @@ export default function StudentsPage({
       <TelegramBotPopup />
     </div>
   );
-}
-
-export async function getStaticProps() {
-  const { teachers: teachersApi, retakes, duties, schedule: scheduleApi } = await import('../../lib/api');
-
-  try {
-    const [teachersData, retakesData, dutiesData] = await Promise.all([
-      teachersApi.list(),
-      retakes.list(),
-      duties.list(),
-    ]);
-
-    const teacherList: Teacher[] = teachersData.teachers;
-    const schedulesByTeacher: Record<string, ScheduleEvent[]> = {};
-    const kpkByTeacher: Record<string, ProfessionalDevelopment[]> = {};
-
-    await Promise.all(
-      teacherList.map(async (t) => {
-        try {
-          const s = await scheduleApi.get(t.id);
-          schedulesByTeacher[t.id] = s.events;
-        } catch {
-          schedulesByTeacher[t.id] = [];
-        }
-      }),
-    );
-
-    return {
-      props: {
-        teachers: teacherList,
-        retakeSchedules: retakesData.retake_schedules,
-        dutySchedules: dutiesData.duty_schedules,
-        schedulesByTeacher,
-        kpkByTeacher,
-      },
-    };
-  } catch {
-    // Fallback to static JSON while backend is unavailable
-    const teachersData = require('../../public/teachers.json');
-    const schedulesData = require('../../public/retake_schedules.json');
-    const fs = require('fs');
-    const path = require('path');
-    const { transformTeacher } = await import('../../lib/mock-data');
-
-    const teacherList: Teacher[] = teachersData.teachers.map(transformTeacher);
-    const schedulesByTeacher: Record<string, ScheduleEvent[]> = {};
-    for (const teacher of teacherList) {
-      try {
-        const filePath = path.join(process.cwd(), 'public', 'schedules', `${teacher.id}.json`);
-        const raw = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-        schedulesByTeacher[teacher.id] = (raw.events ?? []).map((e: { id: string; title: string; start: string; end: string; building?: string; auditorium?: string; groups?: string[]; class_type_short?: string; class_type_full?: string }) => ({
-          id: e.id, title: e.title, start: e.start, end: e.end,
-          class_type_short: e.class_type_short ?? '',
-          class_type_full: e.class_type_full ?? '',
-          building: e.building ?? '',
-          auditorium: e.auditorium ?? '',
-          groups: e.groups ?? [],
-        }));
-      } catch {
-        schedulesByTeacher[teacher.id] = [];
-      }
-    }
-
-    return {
-      props: {
-        teachers: teacherList,
-        retakeSchedules: schedulesData.retake_schedules,
-        dutySchedules: schedulesData.duty_schedules,
-        schedulesByTeacher,
-        kpkByTeacher: {},
-      },
-    };
-  }
 }
