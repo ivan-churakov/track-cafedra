@@ -1,16 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { GetStaticProps, GetStaticPaths } from 'next';
-import { teachers as teachersApi, retakes as retakesApi, duties as dutiesApi, schedule as scheduleApi } from '../../lib/api';
+import { useRouter } from 'next/router';
+import {
+  teachers as teachersApi,
+  retakes as retakesApi,
+  duties as dutiesApi,
+  schedule as scheduleApi,
+  ApiError,
+} from '../../lib/api';
 import type { Teacher, CalendarEvent, CalendarEventType, RetakeSchedule, DutySchedule, ScheduleEvent } from '../../types';
 import { WeeklyCalendar } from '../../Components/Calendar/WeeklyCalendar';
-
-interface Props {
-  teacher: Teacher;
-  retakeSchedules: RetakeSchedule[];
-  dutySchedules: DutySchedule[];
-  scheduleEvents: ScheduleEvent[];
-}
 
 function retakeToEvent(r: RetakeSchedule): CalendarEvent {
   const start = new Date(r.datetime);
@@ -72,26 +71,109 @@ function getDegreeLevel(degrees: string[]): { label: string; color: string } | n
   return { label: degrees[0], color: 'text-gray-300' };
 }
 
-export default function TeacherProfilePage({
-  teacher,
-  retakeSchedules,
-  dutySchedules,
-  scheduleEvents,
-}: Props) {
-  const preloadedEvents = useMemo(
-    (): CalendarEvent[] => scheduleEvents.map(scheduleToCalendar),
-    [scheduleEvents],
+function TopBar() {
+  return (
+    <div className="border-b border-gray-700 px-6 py-4 flex items-center gap-4">
+      <Link href="/teachers" className="text-gray-400 hover:text-white transition-colors text-sm">
+        ← К поиску
+      </Link>
+      <span className="text-gray-600">|</span>
+      <Link href="/" className="text-gray-400 hover:text-white transition-colors text-sm">
+        На главную
+      </Link>
+    </div>
   );
+}
 
-  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>(preloadedEvents);
+export default function TeacherProfilePage() {
+  const router = useRouter();
+
+  const teacherId = useMemo(() => {
+    const raw = Array.isArray(router.query.id) ? router.query.id[0] : router.query.id;
+    const n = Number(raw);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  }, [router.query.id]);
+
+  const [teacher, setTeacher] = useState<Teacher | null>(null);
+  const [retakeSchedules, setRetakeSchedules] = useState<RetakeSchedule[]>([]);
+  const [dutySchedules, setDutySchedules] = useState<DutySchedule[]>([]);
+  const [scheduleEvents, setScheduleEvents] = useState<ScheduleEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!router.isReady) return;
+
+    if (teacherId === null) {
+      setError('Некорректный идентификатор преподавателя');
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+
+    // Основные данные карточки — определяют успех/ошибку загрузки.
+    teachersApi
+      .get(teacherId)
+      .then(t => {
+        if (!cancelled) setTeacher(t);
+      })
+      .catch(err => {
+        if (cancelled) return;
+        setTeacher(null);
+        if (err instanceof ApiError && err.status === 404) {
+          setError('Преподаватель не найден');
+        } else {
+          setError('Не удалось загрузить данные преподавателя');
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    // Данные расписания вспомогательны — их недоступность не ломает карточку.
+    retakesApi.list(teacherId).then(d => { if (!cancelled) setRetakeSchedules(d.retake_schedules); }).catch(() => {});
+    dutiesApi.list(teacherId).then(d => { if (!cancelled) setDutySchedules(d.duty_schedules); }).catch(() => {});
+    scheduleApi.get(teacherId).then(d => { if (!cancelled) setScheduleEvents(d.events); }).catch(() => {});
+
+    return () => { cancelled = true; };
+  }, [router.isReady, teacherId]);
 
   const allEvents = useMemo((): CalendarEvent[] => {
     return [
-      ...calendarEvents,
+      ...scheduleEvents.map(scheduleToCalendar),
       ...retakeSchedules.map(retakeToEvent),
       ...dutySchedules.map(dutyToEvent),
     ];
-  }, [calendarEvents, retakeSchedules, dutySchedules]);
+  }, [scheduleEvents, retakeSchedules, dutySchedules]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white">
+        <TopBar />
+        <div className="max-w-5xl mx-auto px-6 py-20 text-center text-gray-400">
+          Загрузка данных преподавателя...
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !teacher) {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white">
+        <TopBar />
+        <div className="max-w-5xl mx-auto px-6 py-20 text-center">
+          <div className="text-5xl mb-4">🔍</div>
+          <div className="text-gray-300 text-lg">{error ?? 'Преподаватель не найден'}</div>
+          <Link href="/teachers" className="inline-block mt-6 text-sm text-cyan-400 hover:text-cyan-300 transition-colors">
+            ← Вернуться к списку преподавателей
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const experience = totalExperience(teacher);
   const degreeInfo = getDegreeLevel(teacher.academic_degrees);
@@ -111,16 +193,7 @@ export default function TeacherProfilePage({
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      {/* Top bar */}
-      <div className="border-b border-gray-700 px-6 py-4 flex items-center gap-4">
-        <Link href="/teachers" className="text-gray-400 hover:text-white transition-colors text-sm">
-          ← К поиску
-        </Link>
-        <span className="text-gray-600">|</span>
-        <Link href="/" className="text-gray-400 hover:text-white transition-colors text-sm">
-          На главную
-        </Link>
-      </div>
+      <TopBar />
 
       <div className="max-w-5xl mx-auto px-6 py-8">
         <div className="grid gap-6 lg:grid-cols-3">
@@ -241,45 +314,3 @@ export default function TeacherProfilePage({
     </div>
   );
 }
-
-export const getStaticPaths: GetStaticPaths = async () => {
-  let ids: number[];
-  try {
-    const { teachers } = await teachersApi.list();
-    ids = teachers.map((t) => t.id);
-  } catch {
-    // Fallback to static JSON while backend is unavailable
-    const data = require('../../public/teachers.json');
-    ids = data.teachers.map((t: { id: number }) => t.id);
-  }
-
-  return {
-    paths: ids.map((id) => ({ params: { id: String(id) } })),
-    fallback: false,
-  };
-};
-
-export const getStaticProps: GetStaticProps = async ({ params }) => {
-  const id = Number(params?.id);
-  if (!id) return { notFound: true };
-
-  try {
-    const [teacher, retakesData, dutiesData, scheduleData] = await Promise.all([
-      teachersApi.get(id),
-      retakesApi.list(id),
-      dutiesApi.list(id),
-      scheduleApi.get(id),
-    ]);
-
-    return {
-      props: {
-        teacher,
-        retakeSchedules: retakesData.retake_schedules,
-        dutySchedules: dutiesData.duty_schedules,
-        scheduleEvents: scheduleData.events,
-      },
-    };
-  } catch {
-    return { notFound: true };
-  }
-};

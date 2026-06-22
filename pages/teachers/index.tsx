@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { Teacher, CalendarEvent, RetakeSchedule, DutySchedule } from '../../types';
+import {
+  teachers as teachersApi,
+  retakes as retakesApi,
+  duties as dutiesApi,
+} from '../../lib/api';
 import { WeeklyCalendar } from '../../Components/Calendar/WeeklyCalendar';
 import { TelegramBotPopup } from '../../Components/TelegramBotPopup/TelegramBotPopup';
-
-interface Props {
-  teachers: Teacher[];
-  retakeSchedules: RetakeSchedule[];
-  dutySchedules: DutySchedule[];
-}
 
 function retakeToEvent(r: RetakeSchedule): CalendarEvent {
   const start = new Date(r.datetime);
@@ -36,9 +35,41 @@ function dutyToEvent(d: DutySchedule): CalendarEvent {
   };
 }
 
-export default function TeachersPage({ teachers, retakeSchedules, dutySchedules }: Props) {
+export default function TeachersPage() {
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [retakeSchedules, setRetakeSchedules] = useState<RetakeSchedule[]>([]);
+  const [dutySchedules, setDutySchedules] = useState<DutySchedule[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [query, setQuery] = useState('');
   const [selectedTeacherId, setSelectedTeacherId] = useState<number | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+
+    Promise.all([
+      teachersApi.list(),
+      retakesApi.list(),
+      dutiesApi.list(),
+    ])
+      .then(([teachersData, retakesData, dutiesData]) => {
+        if (cancelled) return;
+        setTeachers(teachersData.teachers);
+        setRetakeSchedules(retakesData.retake_schedules);
+        setDutySchedules(dutiesData.duty_schedules);
+      })
+      .catch(() => {
+        if (!cancelled) setError('Не удалось загрузить список преподавателей с сервера');
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => { cancelled = true; };
+  }, []);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -87,6 +118,15 @@ export default function TeachersPage({ teachers, retakeSchedules, dutySchedules 
       </div>
 
       <div className="max-w-6xl mx-auto px-6 py-8">
+        {loading && (
+          <div className="text-gray-500 text-sm mb-6">Загрузка данных с сервера...</div>
+        )}
+        {error && (
+          <div className="text-red-400 text-sm mb-6 bg-red-900/20 border border-red-900/50 rounded-xl px-4 py-2">
+            {error}
+          </div>
+        )}
+
         {/* Search */}
         <div className="mb-8">
           <label className="block text-sm text-gray-400 mb-2">
@@ -234,35 +274,4 @@ export default function TeachersPage({ teachers, retakeSchedules, dutySchedules 
       <TelegramBotPopup />
     </div>
   );
-}
-
-export async function getStaticProps() {
-  const { teachers: teachersApi, retakes, duties } = await import('../../lib/api');
-
-  try {
-    const [teachersData, retakesData, dutiesData] = await Promise.all([
-      teachersApi.list(),
-      retakes.list(),
-      duties.list(),
-    ]);
-    return {
-      props: {
-        teachers: teachersData.teachers,
-        retakeSchedules: retakesData.retake_schedules,
-        dutySchedules: dutiesData.duty_schedules,
-      },
-    };
-  } catch {
-    // Fallback to static JSON while backend is unavailable
-    const teachersData = require('../../public/teachers.json');
-    const schedulesData = require('../../public/retake_schedules.json');
-    const { transformTeacher } = await import('../../lib/mock-data');
-    return {
-      props: {
-        teachers: teachersData.teachers.map(transformTeacher),
-        retakeSchedules: schedulesData.retake_schedules,
-        dutySchedules: schedulesData.duty_schedules,
-      },
-    };
-  }
 }
