@@ -1239,6 +1239,9 @@ export default function AdminPage() {
         </nav>
 
         <div className="px-2 py-3 border-t border-gray-700 space-y-1">
+          <Link href="/new-track" className="block px-3 py-2 rounded-xl text-sm text-gray-400 hover:text-white hover:bg-gray-700 transition-colors">
+            🗺 Редактор треков
+          </Link>
           <Link href="/teachers" className="block px-3 py-2 rounded-xl text-sm text-gray-400 hover:text-white hover:bg-gray-700 transition-colors">
             🔍 Поиск преп.
           </Link>
