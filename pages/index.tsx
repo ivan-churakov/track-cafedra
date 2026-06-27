@@ -302,7 +302,7 @@ export default function Home() {
         </div>
       </div>
       <div className="h-full flex flex-col gap-10">
-        <div className="h-[100vh] flex flex-col p-4 sm:p-6">
+        <div className="hidden sm:flex h-[100vh] flex-col p-4 sm:p-6">
           <div className="relative flex-1 min-h-0 w-full pb-2">
             {/* Бесконечная карусель: видно 3 карточки, бесшовная прокрутка по кругу */}
             <div className="overflow-hidden w-full h-full">
@@ -378,8 +378,8 @@ export default function Home() {
 
 
         {/* Portal navigation */}
-        <div className="shrink-0 p-4 sm:p-6">
-          <div className="mb-3">
+        <div className="shrink-0 p-4 sm:p-6 min-h-screen sm:min-h-0 flex flex-col justify-center sm:block">
+          <div className="hidden sm:block mb-3">
             <h2 className="text-white font-semibold text-2xl mb-1">Перейти в систему</h2>
             <p className="text-gray-400 text-sm">
               Расписание преподавателей, контакты и кабинеты — для студентов. Редактирование расписания и курсов — для преподавателей.
@@ -423,6 +423,27 @@ export default function Home() {
                 </div>
                 <p className="text-gray-500 text-sm leading-snug">
                   Редактирование расписания, добавление курсов повышения квалификации, график пересдач.
+                </p>
+              </div>
+              <span className="text-gray-300 group-hover:text-gray-500 text-2xl transition-colors flex-shrink-0">→</span>
+            </Link>
+
+            <Link
+              href="/track"
+              className="group flex items-center gap-4 bg-white rounded-2xl p-5 shadow-xl hover:shadow-2xl transition-shadow sm:col-span-2"
+            >
+              <div className="w-14 h-14 flex-shrink-0 rounded-2xl bg-emerald-50 flex items-center justify-center text-2xl">
+                🗺
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                  <h3 className="font-semibold text-gray-900 text-lg leading-tight">Образовательные треки</h3>
+                  <span className="text-xs bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded-full font-medium whitespace-nowrap">
+                    учебный план
+                  </span>
+                </div>
+                <p className="text-gray-500 text-sm leading-snug">
+                  Дисциплины по семестрам и профилям подготовки — РКБП и ТВП.
                 </p>
               </div>
               <span className="text-gray-300 group-hover:text-gray-500 text-2xl transition-colors flex-shrink-0">→</span>
