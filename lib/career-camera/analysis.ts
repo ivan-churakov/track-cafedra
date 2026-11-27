@@ -6,8 +6,7 @@ import type { AnalysisResult, FrameRect, ImageMetrics, Profession } from "./type
 export const calculateImageMetrics = (data: ArrayLike<number>): ImageMetrics => {
   let brightnessSum = 0;
   let colorSum = 0;
-  let minBrightness = 255;
-  let maxBrightness = 0;
+  const brightnessSamples: number[] = [];
   let sampleCount = 0;
 
   for (let index = 0; index + 2 < data.length; index += 16) {
@@ -17,16 +16,18 @@ export const calculateImageMetrics = (data: ArrayLike<number>): ImageMetrics => 
     const brightness = (red + green + blue) / 3;
     brightnessSum += brightness;
     colorSum += Math.abs(red - green) + Math.abs(green - blue) + Math.abs(blue - red);
-    minBrightness = Math.min(minBrightness, brightness);
-    maxBrightness = Math.max(maxBrightness, brightness);
+    brightnessSamples.push(brightness);
     sampleCount += 1;
   }
 
   if (!sampleCount) return { brightness: 0, colorVariance: 0, contrast: 0 };
+  brightnessSamples.sort((a, b) => a - b);
+  const percentile = (ratio: number) =>
+    brightnessSamples[Math.round((brightnessSamples.length - 1) * ratio)];
   return {
     brightness: brightnessSum / sampleCount,
     colorVariance: colorSum / sampleCount,
-    contrast: maxBrightness - minBrightness,
+    contrast: percentile(0.95) - percentile(0.05),
   };
 };
 
@@ -46,6 +47,16 @@ export const normalizeAnalysisRect = (
   return { x, y, width, height };
 };
 
+const BRIGHTNESS_SENSITIVITY = 12;
+const COLOR_SENSITIVITY = 5;
+const CONTRAST_SENSITIVITY = 10;
+
+const above = (value: number, threshold: number, sensitivity: number) =>
+  1 / (1 + Math.exp((threshold - value) / sensitivity));
+
+const between = (value: number, min: number, max: number, sensitivity: number) =>
+  above(value, min, sensitivity) * above(max, value, sensitivity);
+
 export const determineProfession = (
   metrics: ImageMetrics,
   professionList: Profession[] = professions,
@@ -55,39 +66,53 @@ export const determineProfession = (
   const scores = professionList.map((profession) => {
     let score = 0;
 
-    if (brightness > 120 && brightness < 180) score += 20;
-    if (colorVariance > 30) score += 15;
-    if (contrast > 50) score += 15;
+    score += 20 * between(brightness, 120, 180, BRIGHTNESS_SENSITIVITY);
+    score += 15 * above(colorVariance, 30, COLOR_SENSITIVITY);
+    score += 15 * above(contrast, 50, CONTRAST_SENSITIVITY);
 
-    if (profession.name === "Программист" && brightness > 100 && contrast > 40) score += 20;
-    if (profession.name === "Дизайнер" && colorVariance > 40) score += 25;
-    if (profession.name === "Врач" && brightness > 110 && brightness < 160) score += 20;
-    if (profession.name === "Учитель" && brightness > 100 && contrast > 30) score += 20;
-    if (profession.name === "Предприниматель" && brightness > 120) score += 20;
-    if (profession.name === "Психолог" && brightness > 100 && brightness < 170) score += 20;
-    if (profession.name === "Инженер" && contrast > 45) score += 20;
-    if (profession.name === "Маркетолог" && brightness > 120 && colorVariance > 35) score += 20;
-    if (profession.name === "Писатель" && brightness > 100 && brightness < 180) score += 20;
-    if (profession.name === "Архитектор" && contrast > 40 && colorVariance > 30) score += 20;
+    if (profession.name === "Программист") {
+      score += 20 * above(brightness, 100, BRIGHTNESS_SENSITIVITY) * above(contrast, 40, CONTRAST_SENSITIVITY);
+    }
+    if (profession.name === "Дизайнер") score += 25 * above(colorVariance, 40, COLOR_SENSITIVITY);
+    if (profession.name === "Врач") score += 20 * between(brightness, 110, 160, BRIGHTNESS_SENSITIVITY);
+    if (profession.name === "Учитель") {
+      score += 20 * above(brightness, 100, BRIGHTNESS_SENSITIVITY) * above(contrast, 30, CONTRAST_SENSITIVITY);
+    }
+    if (profession.name === "Предприниматель") score += 20 * above(brightness, 120, BRIGHTNESS_SENSITIVITY);
+    if (profession.name === "Психолог") score += 20 * between(brightness, 100, 170, BRIGHTNESS_SENSITIVITY);
+    if (profession.name === "Инженер") score += 20 * above(contrast, 45, CONTRAST_SENSITIVITY);
+    if (profession.name === "Маркетолог") {
+      score += 20 * above(brightness, 120, BRIGHTNESS_SENSITIVITY) * above(colorVariance, 35, COLOR_SENSITIVITY);
+    }
+    if (profession.name === "Писатель") score += 20 * between(brightness, 100, 180, BRIGHTNESS_SENSITIVITY);
+    if (profession.name === "Архитектор") {
+      score += 20 * above(contrast, 40, CONTRAST_SENSITIVITY) * above(colorVariance, 30, COLOR_SENSITIVITY);
+    }
 
     if (IT_PROFESSIONS_FOR_SCORING.has(profession.name)) {
-      if (brightness > 100 && contrast > 40) score += 25;
-      if (colorVariance > 25) score += 15;
+      score += 25 * above(brightness, 100, BRIGHTNESS_SENSITIVITY) * above(contrast, 40, CONTRAST_SENSITIVITY);
+      score += 15 * above(colorVariance, 25, COLOR_SENSITIVITY);
     }
 
-    if (profession.name === "Веб-разработчик" && colorVariance > 35) score += 15;
-    if (profession.name === "Frontend-разработчик" && colorVariance > 40) score += 20;
-    if (profession.name === "Аналитик данных" && contrast > 50) score += 15;
-    if (profession.name === "Специалист по ИИ/ML" && brightness > 120 && contrast > 45) score += 20;
+    if (profession.name === "Веб-разработчик") score += 15 * above(colorVariance, 35, COLOR_SENSITIVITY);
+    if (profession.name === "Frontend-разработчик") score += 20 * above(colorVariance, 40, COLOR_SENSITIVITY);
+    if (profession.name === "Аналитик данных") score += 15 * above(contrast, 50, CONTRAST_SENSITIVITY);
+    if (profession.name === "Специалист по ИИ/ML") {
+      score += 20 * above(brightness, 120, BRIGHTNESS_SENSITIVITY) * above(contrast, 45, CONTRAST_SENSITIVITY);
+    }
 
     if (TVP_PROFESSIONS.has(profession.name)) {
-      if (brightness > 110 && contrast > 45) score += 30;
-      if (colorVariance > 40) score += 25;
+      score += 30 * above(brightness, 110, BRIGHTNESS_SENSITIVITY) * above(contrast, 45, CONTRAST_SENSITIVITY);
+      score += 25 * above(colorVariance, 40, COLOR_SENSITIVITY);
     }
 
-    if (profession.name === "3D-художник" && colorVariance > 45) score += 20;
-    if (profession.name === "Геймдизайнер" && brightness > 120 && colorVariance > 35) score += 20;
-    if (profession.name === "VR/AR разработчик" && contrast > 50 && brightness > 110) score += 25;
+    if (profession.name === "3D-художник") score += 20 * above(colorVariance, 45, COLOR_SENSITIVITY);
+    if (profession.name === "Геймдизайнер") {
+      score += 20 * above(brightness, 120, BRIGHTNESS_SENSITIVITY) * above(colorVariance, 35, COLOR_SENSITIVITY);
+    }
+    if (profession.name === "VR/AR разработчик") {
+      score += 25 * above(contrast, 50, CONTRAST_SENSITIVITY) * above(brightness, 110, BRIGHTNESS_SENSITIVITY);
+    }
 
     return { profession, score };
   });
