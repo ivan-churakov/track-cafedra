@@ -27,6 +27,14 @@ yarn-error.log*
 
 # local env files
 .env*.local
+.env
+.env.production
+/deploy/.env.production
+/dist/
+/.deploy-keys/
+/backups/
+/deploy/RELEASE.json
+/deploy/.verify.*
 
 # vercel
 .vercel
@@ -39,3 +47,5 @@ next-env.d.ts
 /public/words.mp4
 /public/TVP.MP4
 Ролевая модель backend.md
+
+/track-cafedra-backend

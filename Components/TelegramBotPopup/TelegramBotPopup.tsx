@@ -1,11 +1,12 @@
 import { useState } from 'react';
 
-const TG_BOT_URL = 'https://t.me/kb9_pois_bot';
+const BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ?? '';
+const TG_BOT_URL = `https://t.me/${BOT_USERNAME}`;
 
 export function TelegramBotPopup() {
   const [closed, setClosed] = useState(false);
 
-  if (closed) return null;
+  if (closed || !BOT_USERNAME) return null;
 
   return (
     <div className="fixed bottom-5 right-5 z-50 animate-[tg-popup-in_0.35s_ease-out]">

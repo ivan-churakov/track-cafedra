@@ -1,6 +1,6 @@
 import '../styles/globals.css'
 import type { AppProps } from 'next/app'
-import localFont from '@next/font/local'
+import localFont from 'next/font/local'
 import { useEffect, useState } from "react";
 import { Layout } from "../Components/Layout/Layout";
 

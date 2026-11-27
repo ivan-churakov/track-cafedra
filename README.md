@@ -1,4 +1,18 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Track Cafedra
+
+Веб-приложение кафедры: Next.js 15 / React 18, Java 21 / Spring Boot,
+PostgreSQL и необязательный Telegram-бот.
+
+**Развёртывание на Debian 12:** [DEPLOY.md](DEPLOY.md).
+Production Compose: `compose.production.yml`. Полный архив для передачи:
+`npm run package:release` (включает вложенный backend-репозиторий).
+
+Для разработки: Node.js 24, `npm ci`, параметры из `.env.example` в `.env.local`,
+`npm run dev`. Next.js направляет `/api/*` в `BACKEND_INTERNAL_URL`
+(по умолчанию `http://127.0.0.1:8080`). Backend запускается отдельно;
+инструкции находятся в [его README](track-cafedra-backend/README.md).
+
+Следующий раздел содержит исходную справку create-next-app.
 
 ## Getting Started
 

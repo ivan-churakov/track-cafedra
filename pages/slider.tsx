@@ -1,4 +1,5 @@
 import * as React from "react";
+import Image from "next/image";
 
 const images = [
   "https://i.pinimg.com/1200x/14/7a/99/147a991d2476e10ed6bb4ef8ff97d3a9.jpg",
@@ -20,7 +21,7 @@ const SliderPage = () => {
   return (
     <div className="relative w-full h-full flex flex-col justify-center items-center bg-white">
       <div className="w-1/2 h-1/2">
-        <div className="w-full h-full"><img className="w-full h-full object-cover" src={images[index]}/></div>
+        <div className="relative w-full h-full"><Image className="object-cover" src={images[index]} alt={`Слайд ${index + 1}`} fill unoptimized /></div>
         <div className="flex justify-between">
           <button onClick={prevSlide}>Предыдущий слайд</button>
           <button onClick={nextSlide}>Следующий слайд</button>

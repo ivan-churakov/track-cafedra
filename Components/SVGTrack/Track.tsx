@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import qrTVP from "../../image/qr-code-TVP.png";
 import qrRKBP from "../../image/qr-code-RKBP.png";
+import { useTrackViewport } from "./useTrackViewport";
 
 export type Discipline = {
   title: string;
@@ -29,10 +30,6 @@ export const Track = ({
   variant: string;
 }) => {
   const [course, setCourse] = useState(0);
-  const [scale, setScale] = useState(1);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [hoveredTopic, setHoveredTopic] = useState<any>(null);
   const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 });
   const [selectedTrack, setSelectedTrack] = useState<
@@ -41,6 +38,8 @@ export const Track = ({
   const [isMobile, setIsMobile] = useState(false);
 
   const svgRef = useRef<SVGSVGElement>(null);
+  const { scale, position, isDragging, viewportRef, viewBox, zoomBy, reset, handlers } =
+    useTrackViewport(svgRef, topics, isMobile, course);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -69,9 +68,9 @@ export const Track = ({
 
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.key === "+" || e.key === "=") {
-        setScale((prev) => Math.min(prev * 1.1, 3));
+        zoomBy(1.1);
       } else if (e.key === "-") {
-        setScale((prev) => Math.max(prev * 0.9, 0.5));
+        zoomBy(0.9);
       }
     };
 
@@ -82,7 +81,7 @@ export const Track = ({
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("keydown", handleKeyPress);
     };
-  }, [hoveredTopic, isDragging]);
+  }, [hoveredTopic, isDragging, zoomBy]);
 
   const getPointOnLine = (
     x1: number,
@@ -95,63 +94,6 @@ export const Track = ({
       x: x1 + (x2 - x1) * t,
       y: y1 + (y2 - y1) * t,
     };
-  };
-
-  const handleWheel = (e: React.WheelEvent) => {
-    if (e.metaKey || e.ctrlKey) {
-      e.preventDefault();
-      const delta = e.deltaY > 0 ? 0.9 : 1.1;
-      setScale((prev) => Math.min(Math.max(0.5, prev * delta), 3));
-    } else {
-      setPosition((prev) => ({
-        x: prev.x - e.deltaX,
-        y: prev.y - e.deltaY,
-      }));
-    }
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (e.touches.length === 1) {
-      setIsDragging(true);
-      setDragStart({
-        x: e.touches[0].clientX - position.x,
-        y: e.touches[0].clientY - position.y,
-      });
-    }
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (isDragging && e.touches.length === 1) {
-      setPosition({
-        x: e.touches[0].clientX - dragStart.x,
-        y: e.touches[0].clientY - dragStart.y,
-      });
-    }
-  };
-
-  const handleTouchEnd = () => {
-    setIsDragging(false);
-  };
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    setIsDragging(true);
-    setDragStart({
-      x: e.clientX - position.x,
-      y: e.clientY - position.y,
-    });
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (isDragging) {
-      setPosition({
-        x: e.clientX - dragStart.x,
-        y: e.clientY - dragStart.y,
-      });
-    }
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
   };
 
   const formatText = (topic: {
@@ -189,23 +131,12 @@ export const Track = ({
     return lines;
   };
 
-  useEffect(() => {
-    const preventDefault = (e: WheelEvent) => {
-      if (e.metaKey || e.ctrlKey) e.preventDefault();
-    };
-
-    document.addEventListener("wheel", preventDefault, { passive: false });
-    return () => document.removeEventListener("wheel", preventDefault);
-  }, []);
-
   return (
-    <>
+    <div className="fixed inset-0 flex flex-col overflow-hidden bg-white text-gray-900">
       <div
-        className={`fixed z-10 flex flex-col gap-4 p-4 rounded-md ${
-          isMobile ? "w-full" : ""
-        }`}
+        className="relative z-10 flex shrink-0 flex-col gap-2 p-2 sm:p-4"
       >
-        <div className={`flex gap-2 ${isMobile ? "flex-wrap" : ""}`}>
+        <div className="flex flex-wrap gap-2">
           <Link
             href="/"
             className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
@@ -221,10 +152,8 @@ export const Track = ({
           </Link>
           <button
             className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
-            onClick={() => {
-              setPosition({ x: 0, y: 0 });
-              setScale(1);
-            }}
+            onClick={reset}
+            aria-label="Показать весь трек"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -260,7 +189,7 @@ export const Track = ({
           ))}
         </div>
 
-        <div className="flex flex-wrap gap-4">
+        <div className="flex flex-wrap gap-2 sm:gap-4">
           <div className="relative">
             <button
               className={`flex items-center gap-2 p-4 rounded-full hover:opacity-80 bg-gray-100 ${
@@ -343,29 +272,23 @@ export const Track = ({
       </div>
 
       <div
-        className="relative w-full h-full overflow-visible"
-        onWheel={handleWheel}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        style={{ userSelect: "none" }}
+        ref={viewportRef}
+        data-track-viewport
+        className="relative min-h-0 w-full flex-1 overflow-hidden"
+        {...handlers}
+        onMouseLeave={() => { handlers.onMouseLeave(); setHoveredTopic(null); }}
+        style={{ userSelect: "none", touchAction: "none" }}
       >
         <svg
           ref={svgRef}
           width="100%"
           height="100%"
-          viewBox={isMobile ? "0 0 800 1120" : "0 0 1200 1120"}
+          viewBox={viewBox}
+          className="block"
           style={{
             transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
             cursor: isDragging ? "grabbing" : "grab",
             overflow: "visible",
-          }}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={() => {
-            handleMouseUp();
-            setHoveredTopic(null);
           }}
         >
           {/* Красная линия */}
@@ -740,11 +663,11 @@ export const Track = ({
         src={variant == "2" ? qrTVP : qrRKBP}
         width={isMobile ? 100 : 200}
         height={isMobile ? 100 : 200}
-        className="absolute bottom-0 right-0 z-10"
+        className="absolute bottom-2 right-2 z-10 h-auto max-h-[20%] w-20 object-contain sm:w-32"
         alt="QR Code"
       />
 
-      {hoveredTopic && (
+      {hoveredTopic && !isDragging && (
         <div
           className="fixed bg-white p-4 rounded-lg shadow-lg transition-transform z-20"
           style={{
@@ -775,6 +698,6 @@ export const Track = ({
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 };

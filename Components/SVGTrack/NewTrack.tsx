@@ -5,6 +5,7 @@ import qrTVP from "../../image/qr-code-TVP.png";
 import qrRKBP from "../../image/qr-code-RKBP.png";
 import type { CurriculumEntry } from "../../types";
 import { entryToDiscipline } from "../../lib/curriculum";
+import { useTrackViewport } from "./useTrackViewport";
 
 /** Дисциплина в координатах SVG-трека. Несёт исходную запись плана для редактирования. */
 export type Discipline = {
@@ -154,10 +155,6 @@ export const Track = ({
   onReorder?: (color: TrackColor, orderedIds: number[]) => void;
 }) => {
   const [course, setCourse] = useState(0);
-  const [scale, setScale] = useState(1);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [hoveredTopic, setHoveredTopic] = useState<Discipline | null>(null);
   const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 });
   const [selectedTrack, setSelectedTrack] = useState<"all" | TrackColor>("all");
@@ -172,6 +169,8 @@ export const Track = ({
 
   const topicPosition = useRef({ x: 0, y: 0 });
   const svgRef = useRef<SVGSVGElement>(null);
+  const { scale, position, isDragging, viewportRef, viewBox, zoomBy, reset, handlers } =
+    useTrackViewport(svgRef, entries, isMobile, course);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 768);
@@ -211,11 +210,13 @@ export const Track = ({
 
   function startDragging(topic: Discipline, e: React.MouseEvent) {
     if (!isAdmin) return;
+    const matrix = svgRef.current?.getScreenCTM();
+    if (!matrix) return;
+    const inverse = matrix.inverse();
+    const start = new DOMPoint(e.clientX, e.clientY).matrixTransform(inverse);
     setIsDraggingTopic(true);
     e.stopPropagation();
 
-    const startX = e.clientX;
-    const startY = e.clientY;
     const initX = topic.position.x;
     const initY = topic.position.y;
     const color = topic.track as TrackColor;
@@ -225,8 +226,9 @@ export const Track = ({
     topicPosition.current = { x: initX, y: initY };
 
     function onMove(ev: MouseEvent) {
-      const dx = ev.clientX - startX;
-      const dy = ev.clientY - startY;
+      const point = new DOMPoint(ev.clientX, ev.clientY).matrixTransform(inverse);
+      const dx = point.x - start.x;
+      const dy = point.y - start.y;
       const rawPos = { x: initX + dx, y: initY + dy };
       topicPosition.current = projectToLine(rawPos.x, rawPos.y, linePoints);
       setTopics((prev) => applyPosition(prev, topic.id, topicPosition.current));
@@ -264,19 +266,6 @@ export const Track = ({
     return updated;
   }
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (isDraggingTopic) return;
-    setIsDragging(true);
-    setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || isDraggingTopic) return;
-    setPosition({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
-  };
-
-  const handleMouseUp = () => setIsDragging(false);
-
   const handleTopicHover = (topic: Discipline, x: number, y: number) => {
     if (!isDragging) {
       setHoveredTopic(topic);
@@ -289,8 +278,8 @@ export const Track = ({
       if (hoveredTopic && !isDragging) setHoverPosition({ x: e.clientX, y: e.clientY });
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "+" || e.key === "=") setScale((p) => Math.min(p * 1.1, 3));
-      else if (e.key === "-") setScale((p) => Math.max(p * 0.9, 0.5));
+      if (e.key === "+" || e.key === "=") zoomBy(1.1);
+      else if (e.key === "-") zoomBy(0.9);
     };
     window.addEventListener("mousemove", onMove);
     window.addEventListener("keydown", onKey);
@@ -298,38 +287,7 @@ export const Track = ({
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("keydown", onKey);
     };
-  }, [hoveredTopic, isDragging]);
-
-  const handleWheel = (e: React.WheelEvent) => {
-    if (e.metaKey || e.ctrlKey) {
-      e.preventDefault();
-      const delta = e.deltaY > 0 ? 0.9 : 1.1;
-      setScale((p) => Math.min(Math.max(0.5, p * delta), 3));
-    } else {
-      setPosition((p) => ({ x: p.x - e.deltaX, y: p.y - e.deltaY }));
-    }
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (e.touches.length === 1) {
-      setIsDragging(true);
-      setDragStart({
-        x: e.touches[0].clientX - position.x,
-        y: e.touches[0].clientY - position.y,
-      });
-    }
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (isDragging && e.touches.length === 1) {
-      setPosition({
-        x: e.touches[0].clientX - dragStart.x,
-        y: e.touches[0].clientY - dragStart.y,
-      });
-    }
-  };
-
-  const handleTouchEnd = () => setIsDragging(false);
+  }, [hoveredTopic, isDragging, zoomBy]);
 
   const formatText = (topic: { title: string }) => {
     const maxCharsPerLine = 36;
@@ -353,14 +311,6 @@ export const Track = ({
     }
     return lines;
   };
-
-  useEffect(() => {
-    const preventDefault = (e: WheelEvent) => {
-      if (e.metaKey || e.ctrlKey) e.preventDefault();
-    };
-    document.addEventListener("wheel", preventDefault, { passive: false });
-    return () => document.removeEventListener("wheel", preventDefault);
-  }, []);
 
   const renderBranch = (color: TrackColor) => {
     const cfg = TRACKS[color];
@@ -419,9 +369,9 @@ export const Track = ({
   };
 
   return (
-    <>
-      <div className={`fixed z-10 flex flex-col gap-4 p-4 rounded-md ${isMobile ? "w-full" : ""}`}>
-        <div className={`flex gap-2 ${isMobile ? "flex-wrap" : ""}`}>
+    <div className="fixed inset-0 flex flex-col overflow-hidden bg-white text-gray-900">
+      <div className="relative z-10 flex shrink-0 flex-col gap-2 p-2 sm:p-4">
+        <div className="flex flex-wrap gap-2">
           <Link href="/" className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
@@ -429,10 +379,8 @@ export const Track = ({
           </Link>
           <button
             className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
-            onClick={() => {
-              setPosition({ x: 0, y: 0 });
-              setScale(1);
-            }}
+            onClick={reset}
+            aria-label="Показать весь трек"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path
@@ -458,6 +406,12 @@ export const Track = ({
             </button>
           ))}
           {isAdmin && (
+            <Link href={variant === "2" ? "/new-track" : "/new-track2"}
+              className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300">
+              {variant === "2" ? "Редактор РКБП" : "Редактор ТВП"}
+            </Link>
+          )}
+          {isAdmin && (
             <button
               className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700"
               onClick={() => onAdd?.()}
@@ -467,7 +421,7 @@ export const Track = ({
           )}
         </div>
 
-        <div className="flex flex-wrap gap-4">
+        <div className="flex flex-wrap gap-2 sm:gap-4">
           <div className="relative">
             <button
               className={`flex items-center gap-2 p-4 rounded-full hover:opacity-80 bg-gray-100 ${selectedTrack === "all" ? "bg-gray-200" : ""}`}
@@ -508,29 +462,23 @@ export const Track = ({
       </div>
 
       <div
-        className="relative w-full h-full overflow-visible"
-        onWheel={handleWheel}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        style={{ userSelect: "none" }}
+        ref={viewportRef}
+        data-track-viewport
+        className="relative min-h-0 w-full flex-1 overflow-hidden"
+        {...handlers}
+        onMouseLeave={() => { handlers.onMouseLeave(); setHoveredTopic(null); }}
+        style={{ userSelect: "none", touchAction: "none" }}
       >
         <svg
           ref={svgRef}
           width="100%"
           height="100%"
-          viewBox={isMobile ? "0 0 800 1120" : "0 0 1200 1120"}
+          viewBox={viewBox}
+          className="block"
           style={{
             transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
             cursor: isDragging ? "grabbing" : "grab",
             overflow: "visible",
-          }}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={() => {
-            handleMouseUp();
-            setHoveredTopic(null);
           }}
         >
           {TRACK_ORDER.map((color) => (
@@ -575,11 +523,11 @@ export const Track = ({
         src={variant == "2" ? qrTVP : qrRKBP}
         width={isMobile ? 100 : 200}
         height={isMobile ? 100 : 200}
-        className="absolute bottom-0 right-0 z-10"
+        className="absolute bottom-2 right-2 z-10 h-auto max-h-[20%] w-20 object-contain sm:w-32"
         alt="QR Code"
       />
 
-      {hoveredTopic && (
+      {hoveredTopic && !isDragging && (
         <div
           className="fixed bg-white p-4 rounded-lg shadow-lg transition-transform z-20"
           style={{
@@ -601,6 +549,6 @@ export const Track = ({
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 };

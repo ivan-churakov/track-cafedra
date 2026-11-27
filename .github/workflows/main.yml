@@ -1,4 +1,4 @@
-name: CI/CD
+name: Verify release
 
 on:
   push:
@@ -17,7 +17,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 24
 
       - name: Install dependencies
         run: npm ci
@@ -25,55 +25,27 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      # - name: Run tests
-      #   run: npm test
+      - name: Run tests
+        run: npm test -- --runInBand
 
       - name: Build project
         run: npm run build
 
-  deploy:
-    needs: build-and-test
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build project
-        run: npm run build
-
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./out
-
-  create-pr:
-    needs: build-and-test
-    if: github.ref == 'refs/heads/development'
+  backend:
+    if: vars.BACKEND_REPOSITORY != ''
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout backend repository
         uses: actions/checkout@v4
-
-      - name: Create and merge PR from development to main
-        uses: peter-evans/create-pull-request@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "chore: automatic PR from development"
-          branch: development
-          base: main
-          title: "Merge development into main"
-          body: "Автоматический PR после успешного прохождения всех тестов"
-          allow-empty-commit: true
-          merge-method: merge
+          repository: ${{ vars.BACKEND_REPOSITORY }}
+          ref: ${{ vars.BACKEND_REF || 'master' }}
+          token: ${{ secrets.BACKEND_READ_TOKEN || github.token }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+      - run: mvn -B verify
+      - run: mvn -B -f telegram-bot/pom.xml verify
 

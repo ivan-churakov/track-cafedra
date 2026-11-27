@@ -1,0 +1,144 @@
+name: track-cafedra
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    command: [postgres, -c, 'shared_buffers=${POSTGRES_SHARED_BUFFERS:-128MB}', -c, 'max_connections=${POSTGRES_MAX_CONNECTIONS:-50}']
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-track_cafedra}
+      POSTGRES_USER: ${POSTGRES_USER:-track_app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    mem_limit: ${POSTGRES_MEMORY:-512m}
+    logging: *logging
+
+  backend:
+    image: track-cafedra/backend:${RELEASE_TAG:-local}
+    build: ./track-cafedra-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-track_cafedra}
+      DB_USERNAME: ${POSTGRES_USER:-track_app}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET}
+      JWT_ISSUER: ${JWT_ISSUER:-mirea-backend}
+      JWT_TTL_MINUTES: ${JWT_TTL_MINUTES:-1440}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD}
+      TELEGRAM_BOT_SECRET: ${TELEGRAM_BOT_SECRET:?Set TELEGRAM_BOT_SECRET}
+      CORS_ALLOWED_ORIGINS: ${PUBLIC_ORIGIN:?Set PUBLIC_ORIGIN}
+      APP_PUBLIC_URL: ${PUBLIC_ORIGIN:?Set PUBLIC_ORIGIN}
+      FRONTEND_LOGIN_URL: ${PUBLIC_ORIGIN:?Set PUBLIC_ORIGIN}/teacher/login
+      REGISTRATION_EMAIL_DOMAINS: ${REGISTRATION_EMAIL_DOMAINS:-edu.mirea.ru,mirea.ru}
+      REGISTRATION_CONFIRMATION_TTL_HOURS: ${REGISTRATION_CONFIRMATION_TTL_HOURS:-24}
+      MAIL_ENABLED: ${MAIL_ENABLED:-false}
+      MAIL_HOST: ${MAIL_HOST:-localhost}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-no-reply@edu.mirea.ru}
+      MAIL_SMTP_AUTH: ${MAIL_SMTP_AUTH:-true}
+      MAIL_SMTP_STARTTLS: ${MAIL_SMTP_STARTTLS:-true}
+      SCHEDULE_SYNC_ENABLED: ${SCHEDULE_SYNC_ENABLED:-true}
+      SCHEDULE_SYNC_CRON: ${SCHEDULE_SYNC_CRON:-0 0 3 * * *}
+      SCHEDULE_CACHE_TTL_HOURS: ${SCHEDULE_CACHE_TTL_HOURS:-24}
+      STORAGE_DIR: /var/lib/track-cafedra/storage
+      MAX_UPLOAD_SIZE: 10MB
+      MAX_UPLOAD_BYTES: 10485760
+      JAVA_OPTS: -XX:MaxRAMPercentage=50.0 -Djava.awt.headless=true
+      SERVER_PORT: 8080
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: never
+      # SMTP availability must not prevent the core API from becoming ready.
+      MANAGEMENT_HEALTH_MAIL_ENABLED: "false"
+    volumes:
+      - backend-storage:/var/lib/track-cafedra/storage
+    healthcheck:
+      test: [CMD, curl, -fsS, 'http://localhost:8080/actuator/health']
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 60s
+    mem_limit: ${BACKEND_MEMORY:-768m}
+    logging: *logging
+
+  frontend:
+    image: track-cafedra/frontend:${FRONTEND_RELEASE_TAG:-${RELEASE_TAG:-local}}
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_API_URL: ""
+        NEXT_PUBLIC_STUDY_PLAN_ID_1: ${STUDY_PLAN_ID_1:-1}
+        NEXT_PUBLIC_STUDY_PLAN_ID_2: ${STUDY_PLAN_ID_2:-2}
+        NEXT_PUBLIC_TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME:-}
+    restart: unless-stopped
+    environment:
+      BACKEND_INTERNAL_URL: http://backend:8080
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    mem_limit: ${FRONTEND_MEMORY:-512m}
+    logging: *logging
+
+  gateway:
+    image: nginx:stable-alpine
+    restart: unless-stopped
+    depends_on:
+      frontend:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${APP_PORT:-8090}:80"
+    volumes:
+      - ./deploy/nginx/gateway.conf:/etc/nginx/conf.d/default.conf:ro
+    healthcheck:
+      test: [CMD, wget, -q, --spider, 'http://127.0.0.1/healthz']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    mem_limit: 64m
+    logging: *logging
+
+  telegram-bot:
+    image: track-cafedra/telegram-bot:${RELEASE_TAG:-local}
+    build: ./track-cafedra-backend/telegram-bot
+    profiles: [telegram]
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      BACKEND_URL: http://backend:8080
+      BACKEND_HTTP_TIMEOUT_SECONDS: 15
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME:-}
+      TELEGRAM_BOT_SECRET: ${TELEGRAM_BOT_SECRET:?Set TELEGRAM_BOT_SECRET}
+      BOT_ENABLED: "true"
+    mem_limit: ${BOT_MEMORY:-384m}
+    logging: *logging
+
+volumes:
+  postgres-data:
+    name: ${POSTGRES_VOLUME_NAME:-track-cafedra-postgres-data}
+  backend-storage:
+    name: ${STORAGE_VOLUME_NAME:-track-cafedra-backend-storage}

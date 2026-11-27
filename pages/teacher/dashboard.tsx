@@ -1206,7 +1206,7 @@ export default function TeacherDashboard() {
                       {teacher.photo_download_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
-                          src={`${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080'}${teacher.photo_download_url}`}
+                          src={`${process.env.NEXT_PUBLIC_API_URL ?? ''}${teacher.photo_download_url}`}
                           alt={teacher.full_name}
                           className="w-16 h-16 rounded-full object-cover"
                         />

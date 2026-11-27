@@ -1,8 +1,9 @@
 import * as React from "react";
-import { GetStaticProps } from "next";
+import { GetServerSideProps } from "next";
 import { Track } from "../Components/SVGTrack/Track";
 import type { Topic } from "../Components/SVGTrack/Track";
-import { studyPlans } from "../lib/api";
+import { serverApiFetch } from "../lib/server-api";
+import type { StudyPlanTracks } from "../types";
 import { entryToDiscipline } from "../lib/curriculum";
 
 const STUDY_PLAN_ID = Number(process.env.NEXT_PUBLIC_STUDY_PLAN_ID_1 ?? 1);
@@ -19,9 +20,8 @@ const TrackPage = ({ topics }: Props) => {
   );
 };
 
-export const getStaticProps: GetStaticProps = async () => {
-  try {
-    const data = await studyPlans.tracks(STUDY_PLAN_ID);
+export const getServerSideProps: GetServerSideProps<Props> = async () => {
+    const data = await serverApiFetch<StudyPlanTracks>(`/api/study-plans/${STUDY_PLAN_ID}/tracks`);
 
     const topics: Topic = {
       red: (data.topics['red'] ?? []).map(entryToDiscipline),
@@ -31,11 +31,6 @@ export const getStaticProps: GetStaticProps = async () => {
     };
 
     return { props: { topics } };
-  } catch {
-    // Fallback to static JSON while backend is unavailable
-    const fallback = require('../public/topic.json');
-    return { props: { topics: fallback.topics } };
-  }
 };
 
 export default TrackPage;

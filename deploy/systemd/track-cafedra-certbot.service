@@ -1,0 +1,8 @@
+[Unit]
+Description=Renew Track Cafedra HTTPS certificates
+Wants=network-online.target
+After=network-online.target nginx.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/certbot/bin/certbot renew --quiet

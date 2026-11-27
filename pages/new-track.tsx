@@ -5,7 +5,10 @@ import { curriculumEntries, directories, ApiError } from "../lib/api";
 import { useAuth } from "../hooks/useAuth";
 import type { CurriculumEntry, Subject } from "../types";
 
-const STUDY_PLAN_ID = Number(process.env.NEXT_PUBLIC_STUDY_PLAN_ID_1 ?? 1);
+const STUDY_PLAN_IDS = {
+  '1': Number(process.env.NEXT_PUBLIC_STUDY_PLAN_ID_1 ?? 1),
+  '2': Number(process.env.NEXT_PUBLIC_STUDY_PLAN_ID_2 ?? 2),
+};
 const TRACK_COLORS = ["red", "green", "blue", "orange"] as const;
 const SEMESTERS = [1, 2, 3, 4, 5, 6, 7, 8];
 
@@ -27,7 +30,8 @@ function toPayload(e: CurriculumEntry): Payload {
   };
 }
 
-const NewTrackPage = () => {
+export const TrackEditor = ({ variant }: { variant: '1' | '2' }) => {
+  const studyPlanId = STUDY_PLAN_IDS[variant];
   const { isAdmin } = useAuth();
   const [entries, setEntries] = useState<CurriculumEntry[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
@@ -36,9 +40,9 @@ const NewTrackPage = () => {
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const res = await curriculumEntries.list(STUDY_PLAN_ID);
+    const res = await curriculumEntries.list(studyPlanId);
     setEntries(res.curriculum_entries);
-  }, []);
+  }, [studyPlanId]);
 
   useEffect(() => {
     load().catch((e) => setError(e?.message ?? "Не удалось загрузить учебный план"));
@@ -49,11 +53,13 @@ const NewTrackPage = () => {
   }, []);
 
   const openAdd = () => {
+    setError(null);
     setEditing(null);
     setModalOpen(true);
   };
 
   const openEdit = (entry: CurriculumEntry) => {
+    setError(null);
     setEditing(entry);
     setModalOpen(true);
   };
@@ -65,7 +71,11 @@ const NewTrackPage = () => {
       setModalOpen(false);
       await load();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Не удалось сохранить");
+      setError(e instanceof ApiError && e.status === 400
+        ? "Не удалось сохранить дисциплину. Проверьте выбранный предмет и параметры учебного плана."
+        : e instanceof ApiError && e.status === 409
+          ? "Предмет с таким названием уже есть в этом учебном плане."
+          : e instanceof ApiError ? e.message : "Не удалось сохранить");
     }
   };
 
@@ -113,7 +123,7 @@ const NewTrackPage = () => {
         </div>
       )}
       <Track
-        variant="1"
+        variant={variant}
         entries={entries}
         isAdmin={isAdmin}
         onAdd={openAdd}
@@ -122,6 +132,8 @@ const NewTrackPage = () => {
       />
       {modalOpen && (
         <DisciplineModal
+          studyPlanId={studyPlanId}
+          error={error}
           editing={editing}
           subjects={subjects}
           existing={entries}
@@ -137,6 +149,8 @@ const NewTrackPage = () => {
 // ── Модалка добавления / редактирования ───────────────────────────────────────
 
 const DisciplineModal = ({
+  studyPlanId,
+  error,
   editing,
   subjects,
   existing,
@@ -144,6 +158,8 @@ const DisciplineModal = ({
   onDelete,
   onClose,
 }: {
+  studyPlanId: number;
+  error: string | null;
   editing: CurriculumEntry | null;
   subjects: Subject[];
   existing: CurriculumEntry[];
@@ -152,6 +168,7 @@ const DisciplineModal = ({
   onClose: () => void;
 }) => {
   const [name, setName] = useState(editing?.name ?? "");
+  const [validationError, setValidationError] = useState<string | null>(null);
   const [trackColor, setTrackColor] = useState(editing?.track_color ?? "red");
   const [semesters, setSemesters] = useState<number[]>(editing?.semesters ?? []);
   const [examSemesters, setExamSemesters] = useState<number[]>(editing?.exam_semesters ?? []);
@@ -171,13 +188,23 @@ const DisciplineModal = ({
   };
 
   const submit = () => {
-    if (!name.trim()) return;
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setValidationError("Введите название предмета.");
+      return;
+    }
+    const subjectName = subjects.find(s => s.name.toLocaleLowerCase() === trimmedName.toLocaleLowerCase())?.name ?? trimmedName;
+    if (existing.some(e => e.id !== editing?.id && e.name.toLocaleLowerCase() === subjectName.toLocaleLowerCase())) {
+      setValidationError("Предмет с таким названием уже есть в этом учебном плане.");
+      return;
+    }
+    setValidationError(null);
     // Цвет трека сменился — позиция старого трека невалидна, кладём в конец нового.
     const colorChanged = editing != null && editing.track_color !== trackColor;
     const position = editing && !colorChanged ? editing.track_position : nextPosition;
     onSave({
-      name: name.trim(),
-      study_plan_id: STUDY_PLAN_ID,
+      name: subjectName,
+      study_plan_id: studyPlanId,
       track_color: trackColor,
       track_position: position,
       semesters,
@@ -218,6 +245,9 @@ const DisciplineModal = ({
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40" onClick={onClose}>
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={editing ? "Редактировать дисциплину" : "Добавить дисциплину"}
         className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
@@ -225,14 +255,21 @@ const DisciplineModal = ({
           {editing ? "Редактировать дисциплину" : "Добавить дисциплину"}
         </h2>
 
+        {(validationError || error) && (
+          <p role="alert" className="mb-4 rounded bg-red-100 p-3 text-sm text-red-800">
+            {validationError || error}
+          </p>
+        )}
+
         <label className="block text-sm font-medium mb-1">Предмет</label>
         <input
           list="subjects-list"
           className="w-full border rounded px-3 py-2 mb-3"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Выберите предмет из справочника"
+          placeholder="Введите название предмета"
         />
+        <p className="mb-3 text-xs text-gray-600">Выберите предмет из подсказок или введите новое название.</p>
         <datalist id="subjects-list">
           {subjects.map((s) => (
             <option key={s.id} value={s.name} />
@@ -312,4 +349,6 @@ const DisciplineModal = ({
   );
 };
 
-export default NewTrackPage;
+export default function NewTrackPage() {
+  return <TrackEditor variant="1" />;
+}

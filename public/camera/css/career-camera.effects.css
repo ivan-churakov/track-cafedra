@@ -253,7 +253,8 @@
 .tech-progress-label {
     display: inline-block;
     margin-top: 8px;
-    font-family: monospace;
+    font-family: inherit;
+    font-variant-numeric: tabular-nums;
     font-size: 0.9em;
     font-weight: 600;
     color: var(--accent);

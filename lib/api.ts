@@ -15,7 +15,6 @@ import type {
   CurriculumEntry,
   StudyPlanTracks,
   PersonnelSummary,
-  KpkSummary,
   Subject,
   Course,
   Direction,
@@ -29,7 +28,7 @@ import type {
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080';
+const BASE_URL = (process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/$/, '');
 
 const TOKEN_KEY = 'auth_token';
 
@@ -85,6 +84,7 @@ export class ApiError extends Error {
     public body?: unknown,
   ) {
     super(message);
+    Object.setPrototypeOf(this, new.target.prototype);
   }
 }
 
@@ -422,12 +422,12 @@ export const reports = {
     return authFetch(`/api/reports/personnel-summary${qs(params ?? {})}`);
   },
 
-  kpkSummary(params?: {
+  kpkSummaryExcelUrl(params?: {
     teacherId?: number;
     from?: string;
     to?: string;
-  }): Promise<KpkSummary> {
-    return authFetch(`/api/reports/kpk-summary${qs(params ?? {})}`);
+  }): string {
+    return `${BASE_URL}/api/reports/kpk-summary.xlsx${qs(params ?? {})}`;
   },
 
   retakesExcelUrl(semester: 'current' | 'previous' = 'current'): string {

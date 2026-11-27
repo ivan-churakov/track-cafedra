@@ -243,7 +243,7 @@ function Field({
   );
 }
 
-function TeacherForm({
+export function TeacherForm({
   teacher,
   onSave,
   onClose,
@@ -288,16 +288,12 @@ function TeacherForm({
       !form.first_name.trim() ||
       !form.middle_name.trim() ||
       !form.position ||
-      form.academic_degrees.length === 0 ||
-      form.academic_titles.length === 0 ||
       !form.email.trim() ||
       !form.mirea_teaching_since ||
       form.before_mirea_years == null ||
-      form.before_mirea_months == null ||
-      !form.tg_username.trim() ||
-      !form.schedule_url.trim();
+      form.before_mirea_months == null;
     if (missing) {
-      setLocalError('Заполните все поля — они обязательны');
+      setLocalError('Заполните обязательные поля, отмеченные звёздочкой');
       return;
     }
     setLocalError('');
@@ -339,7 +335,7 @@ function TeacherForm({
           </Field>
 
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Учёные степени" required>
+            <Field label="Учёные степени">
               <select
                 value=""
                 onChange={e => { addTo('academic_degrees', e.target.value); e.target.value = ''; }}
@@ -359,7 +355,7 @@ function TeacherForm({
                 ))}
               </div>
             </Field>
-            <Field label="Учёные звания" required>
+            <Field label="Учёные звания">
               <select
                 value=""
                 onChange={e => { addTo('academic_titles', e.target.value); e.target.value = ''; }}
@@ -399,11 +395,11 @@ function TeacherForm({
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Telegram" required>
-              <input required value={form.tg_username} onChange={e => set('tg_username', e.target.value)} className={inputClass} placeholder="@username" />
+            <Field label="Telegram">
+              <input value={form.tg_username} onChange={e => set('tg_username', e.target.value)} className={inputClass} placeholder="@username" />
             </Field>
-            <Field label="Ссылка на расписание (iCal)" required>
-              <input required value={form.schedule_url} onChange={e => set('schedule_url', e.target.value)} className={inputClass} placeholder="webcal://..." />
+            <Field label="Ссылка на расписание (iCal)">
+              <input value={form.schedule_url} onChange={e => set('schedule_url', e.target.value)} className={inputClass} placeholder="webcal://..." />
             </Field>
           </div>
 
@@ -1011,25 +1007,11 @@ function ReportsSection() {
   const handleDownloadKpk = async () => {
     setDownloadingKpk(true);
     try {
-      const data = await reports.kpkSummary({
+      const url = reports.kpkSummaryExcelUrl({
         from: dateFrom || undefined,
         to: dateTo || undefined,
       });
-      const lines = [
-        `Сводка по КПК`,
-        `Записей: ${data.summary.total_records}, Часов: ${data.summary.total_hours}`,
-        '',
-        ...data.items.map(
-          item =>
-            `${item.teacher_full_name} — ${item.course_name} (${item.issue_date}) · ${item.hours} ч. · ${item.document_name} № ${item.document_number}`,
-        ),
-      ];
-      const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = 'КПК_сводка.txt';
-      link.click();
-      URL.revokeObjectURL(link.href);
+      await downloadAuthed(url, 'КПК_сводка.xlsx');
     } catch {
       alert('Не удалось получить сводку КПК.');
     } finally {
@@ -1076,7 +1058,7 @@ function ReportsSection() {
       <div>
         <h2 className="text-lg font-semibold mb-4">Отчет КПК</h2>
         <div className="bg-gray-800 rounded-xl border border-gray-700 p-5">
-          <p className="text-sm text-gray-400 mb-4">TXT-файл из API бекенда.</p>
+          <p className="text-sm text-gray-400 mb-4">Excel-файл со сведениями о повышении квалификации за выбранный период.</p>
           <button onClick={handleDownloadKpk} disabled={downloadingKpk}
             className="flex items-center gap-2 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white text-sm font-medium px-5 py-2.5 rounded-xl transition-colors">
             {downloadingKpk ? 'Загрузка...' : 'Скачать отчет КПК ↓'}
@@ -1240,7 +1222,10 @@ export default function AdminPage() {
 
         <div className="px-2 py-3 border-t border-gray-700 space-y-1">
           <Link href="/new-track" className="block px-3 py-2 rounded-xl text-sm text-gray-400 hover:text-white hover:bg-gray-700 transition-colors">
-            🗺 Редактор треков
+            🗺 Редактор РКБП
+          </Link>
+          <Link href="/new-track2" className="block px-3 py-2 rounded-xl text-sm text-gray-400 hover:text-white hover:bg-gray-700 transition-colors">
+            🗺 Редактор ТВП
           </Link>
           <Link href="/teachers" className="block px-3 py-2 rounded-xl text-sm text-gray-400 hover:text-white hover:bg-gray-700 transition-colors">
             🔍 Поиск преп.

@@ -188,7 +188,7 @@ export default function TeacherProfilePage() {
     .slice(0, 2);
 
   const photoSrc = teacher.photo_download_url
-    ? `${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080'}${teacher.photo_download_url}`
+    ? `${process.env.NEXT_PUBLIC_API_URL ?? ''}${teacher.photo_download_url}`
     : null;
 
   return (

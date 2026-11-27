@@ -1,4 +1,22 @@
-node_modules
+**/node_modules
 .next
 out
-.git
+dist
+.deploy-keys
+coverage
+backups
+**/.git
+.github
+.idea
+.claude
+.agents
+.codex
+**/.env*
+**/*.log
+**/*.tsbuildinfo
+track-cafedra-backend
+deploy
+docs
+# These videos are served by host Nginx from persistent media storage.
+public/video.mp4
+public/TVP.MP4
