@@ -1,12 +1,15 @@
 import * as React from "react";
+import Head from "next/head";
+import { CareerCamera } from "../Components/CareerCamera/CareerCamera";
 
 export default function Camera() {
   return (
-    <iframe
-      src="/camera/career-camera.html"
-      style={{ width: "100%", height: "100vh", border: "none", display: "block" }}
-      title="Определение профессии"
-      allow="camera"
-    />
+    <>
+      <Head>
+        <title>Определение профессии</title>
+        <meta name="description" content="Сканирование и подбор профессии кафедры КБ9" />
+      </Head>
+      <CareerCamera />
+    </>
   );
 }
