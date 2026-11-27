@@ -1,12 +1,30 @@
+import { COLOR_PROFESSION_GROUPS, getPixelColorFamily } from "./color-profiles";
 import { professions } from "./data";
 import { getDefaultAnalysisRect } from "./geometry";
 import { IT_PROFESSIONS_FOR_SCORING, TVP_PROFESSIONS } from "./profession-groups";
-import type { AnalysisResult, FrameRect, ImageMetrics, Profession } from "./types";
+import type { AnalysisResult, ColorFamily, FrameRect, ImageMetrics, Profession } from "./types";
+
+const CHROMATIC_FAMILIES: Exclude<ColorFamily, "neutral">[] = [
+  "red",
+  "yellow",
+  "green",
+  "cyan",
+  "blue",
+  "purple",
+];
 
 export const calculateImageMetrics = (data: ArrayLike<number>): ImageMetrics => {
   let brightnessSum = 0;
   let colorSum = 0;
   const brightnessSamples: number[] = [];
+  const colorCounts: Record<Exclude<ColorFamily, "neutral">, number> = {
+    red: 0,
+    yellow: 0,
+    green: 0,
+    cyan: 0,
+    blue: 0,
+    purple: 0,
+  };
   let sampleCount = 0;
 
   for (let index = 0; index + 2 < data.length; index += 16) {
@@ -16,18 +34,36 @@ export const calculateImageMetrics = (data: ArrayLike<number>): ImageMetrics => 
     const brightness = (red + green + blue) / 3;
     brightnessSum += brightness;
     colorSum += Math.abs(red - green) + Math.abs(green - blue) + Math.abs(blue - red);
+    const colorFamily = getPixelColorFamily(red, green, blue);
+    if (colorFamily !== "neutral") colorCounts[colorFamily] += 1;
     brightnessSamples.push(brightness);
     sampleCount += 1;
   }
 
-  if (!sampleCount) return { brightness: 0, colorVariance: 0, contrast: 0 };
+  if (!sampleCount) {
+    return { brightness: 0, colorVariance: 0, contrast: 0, dominantColor: "neutral", colorShare: 0 };
+  }
   brightnessSamples.sort((a, b) => a - b);
   const percentile = (ratio: number) =>
     brightnessSamples[Math.round((brightnessSamples.length - 1) * ratio)];
+  let dominantColor: ColorFamily = "neutral";
+  let dominantCount = 0;
+  CHROMATIC_FAMILIES.forEach((family) => {
+    if (colorCounts[family] > dominantCount) {
+      dominantColor = family;
+      dominantCount = colorCounts[family];
+    }
+  });
+  const colorShare = dominantCount / sampleCount;
+  if (colorShare < 0.2) {
+    dominantColor = "neutral";
+  }
   return {
     brightness: brightnessSum / sampleCount,
     colorVariance: colorSum / sampleCount,
     contrast: percentile(0.95) - percentile(0.05),
+    dominantColor,
+    colorShare,
   };
 };
 
@@ -63,7 +99,14 @@ export const determineProfession = (
 ): AnalysisResult => {
   if (!professionList.length) throw new Error("Список профессий пуст");
   const { brightness, colorVariance, contrast } = metrics;
-  const scores = professionList.map((profession) => {
+  const colorGroup = metrics.dominantColor
+    ? COLOR_PROFESSION_GROUPS[metrics.dominantColor]
+    : undefined;
+  const colorCandidates = colorGroup
+    ? professionList.filter((profession) => colorGroup.has(profession.name))
+    : professionList;
+  const candidates = colorCandidates.length ? colorCandidates : professionList;
+  const scores = candidates.map((profession) => {
     let score = 0;
 
     score += 20 * between(brightness, 120, 180, BRIGHTNESS_SENSITIVITY);
@@ -74,17 +117,10 @@ export const determineProfession = (
       score += 20 * above(brightness, 100, BRIGHTNESS_SENSITIVITY) * above(contrast, 40, CONTRAST_SENSITIVITY);
     }
     if (profession.name === "Дизайнер") score += 25 * above(colorVariance, 40, COLOR_SENSITIVITY);
-    if (profession.name === "Врач") score += 20 * between(brightness, 110, 160, BRIGHTNESS_SENSITIVITY);
-    if (profession.name === "Учитель") {
-      score += 20 * above(brightness, 100, BRIGHTNESS_SENSITIVITY) * above(contrast, 30, CONTRAST_SENSITIVITY);
-    }
-    if (profession.name === "Предприниматель") score += 20 * above(brightness, 120, BRIGHTNESS_SENSITIVITY);
-    if (profession.name === "Психолог") score += 20 * between(brightness, 100, 170, BRIGHTNESS_SENSITIVITY);
     if (profession.name === "Инженер") score += 20 * above(contrast, 45, CONTRAST_SENSITIVITY);
     if (profession.name === "Маркетолог") {
       score += 20 * above(brightness, 120, BRIGHTNESS_SENSITIVITY) * above(colorVariance, 35, COLOR_SENSITIVITY);
     }
-    if (profession.name === "Писатель") score += 20 * between(brightness, 100, 180, BRIGHTNESS_SENSITIVITY);
     if (profession.name === "Архитектор") {
       score += 20 * above(contrast, 40, CONTRAST_SENSITIVITY) * above(colorVariance, 30, COLOR_SENSITIVITY);
     }

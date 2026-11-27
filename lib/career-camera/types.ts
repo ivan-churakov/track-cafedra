@@ -26,10 +26,14 @@ export interface Profession {
   salary: ProfessionSalary;
 }
 
+export type ColorFamily = "neutral" | "red" | "yellow" | "green" | "cyan" | "blue" | "purple";
+
 export interface ImageMetrics {
   brightness: number;
   colorVariance: number;
   contrast: number;
+  dominantColor?: ColorFamily;
+  colorShare?: number;
 }
 
 export interface ProfessionMatch {
