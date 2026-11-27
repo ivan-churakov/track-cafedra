@@ -385,83 +385,68 @@ export default function Home() {
               Расписание преподавателей, контакты и кабинеты — для студентов. Редактирование расписания и курсов — для преподавателей.
             </p>
           </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Link
               href="/students"
-              className="group flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-[0_18px_50px_-35px_rgba(15,23,42,0.45)] transition-colors hover:border-teal-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2"
+              className="group flex items-center gap-4 bg-white rounded-2xl p-5 shadow-xl hover:shadow-2xl transition-shadow"
             >
-              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600 transition-colors group-hover:bg-teal-50 group-hover:text-teal-700">
-                <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <circle cx="9" cy="8" r="3" stroke="currentColor" strokeWidth="1.5" />
-                  <path d="M3.5 19v-1.5A4.5 4.5 0 0 1 8 13h2a4.5 4.5 0 0 1 4.5 4.5V19M15 5.5a3 3 0 0 1 0 5.8M17 13.5a4.5 4.5 0 0 1 3.5 4.4V19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
+              <div className="w-14 h-14 flex-shrink-0 rounded-2xl bg-blue-50 flex items-center justify-center text-2xl">
+                👥
               </div>
-              <div className="min-w-0 flex-1">
-                <div className="mb-1 flex flex-wrap items-center gap-2">
-                  <h3 className="text-lg font-medium leading-tight tracking-tight text-slate-900">Для студентов</h3>
-                  <span className="whitespace-nowrap rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                  <h3 className="font-semibold text-gray-900 text-lg leading-tight">Для студентов</h3>
+                  <span className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-medium whitespace-nowrap">
                     без входа
                   </span>
                 </div>
-                <p className="text-sm leading-relaxed text-slate-500">
+                <p className="text-gray-500 text-sm leading-snug">
                   Список преподавателей кафедры, расписание присутствия в вузе, номера кабинетов, контакты.
                 </p>
               </div>
-              <svg className="h-5 w-5 flex-shrink-0 text-slate-300 transition-colors group-hover:text-teal-600" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                <path d="m7 4 6 6-6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              <span className="text-gray-300 group-hover:text-gray-500 text-2xl transition-colors flex-shrink-0">→</span>
             </Link>
 
             <Link
               href="/teacher/login"
-              className="group flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-[0_18px_50px_-35px_rgba(15,23,42,0.45)] transition-colors hover:border-teal-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2"
+              className="group flex items-center gap-4 bg-white rounded-2xl p-5 shadow-xl hover:shadow-2xl transition-shadow"
             >
-              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600 transition-colors group-hover:bg-teal-50 group-hover:text-teal-700">
-                <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11v16H6.5A2.5 2.5 0 0 0 4 21.5v-16ZM20 5.5A2.5 2.5 0 0 0 17.5 3H13v16h4.5a2.5 2.5 0 0 1 2.5 2.5v-16Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-                </svg>
+              <div className="w-14 h-14 flex-shrink-0 rounded-2xl bg-amber-50 flex items-center justify-center text-2xl">
+                🎓
               </div>
-              <div className="min-w-0 flex-1">
-                <div className="mb-1 flex flex-wrap items-center gap-2">
-                  <h3 className="text-lg font-medium leading-tight tracking-tight text-slate-900">Для преподавателей</h3>
-                  <span className="whitespace-nowrap rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                  <h3 className="font-semibold text-gray-900 text-lg leading-tight">Для преподавателей</h3>
+                  <span className="text-xs bg-amber-100 text-amber-600 px-2 py-0.5 rounded-full font-medium whitespace-nowrap">
                     вход
                   </span>
                 </div>
-                <p className="text-sm leading-relaxed text-slate-500">
+                <p className="text-gray-500 text-sm leading-snug">
                   Редактирование расписания, добавление курсов повышения квалификации, график пересдач.
                 </p>
               </div>
-              <svg className="h-5 w-5 flex-shrink-0 text-slate-300 transition-colors group-hover:text-teal-600" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                <path d="m7 4 6 6-6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              <span className="text-gray-300 group-hover:text-gray-500 text-2xl transition-colors flex-shrink-0">→</span>
             </Link>
 
             <Link
               href="/track"
-              className="group flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-[0_18px_50px_-35px_rgba(15,23,42,0.45)] transition-colors hover:border-teal-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 sm:col-span-2 xl:col-span-1"
+              className="group flex items-center gap-4 bg-white rounded-2xl p-5 shadow-xl hover:shadow-2xl transition-shadow sm:col-span-2"
             >
-              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600 transition-colors group-hover:bg-teal-50 group-hover:text-teal-700">
-                <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <circle cx="6" cy="6" r="2.5" stroke="currentColor" strokeWidth="1.5" />
-                  <circle cx="18" cy="18" r="2.5" stroke="currentColor" strokeWidth="1.5" />
-                  <path d="M8.5 6H14a4 4 0 0 1 4 4v2M18 12v3.5M6 8.5V18h9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
+              <div className="w-14 h-14 flex-shrink-0 rounded-2xl bg-emerald-50 flex items-center justify-center text-2xl">
+                🗺
               </div>
-              <div className="min-w-0 flex-1">
-                <div className="mb-1 flex flex-wrap items-center gap-2">
-                  <h3 className="text-lg font-medium leading-tight tracking-tight text-slate-900">Образовательные треки</h3>
-                  <span className="whitespace-nowrap rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                  <h3 className="font-semibold text-gray-900 text-lg leading-tight">Образовательные треки</h3>
+                  <span className="text-xs bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded-full font-medium whitespace-nowrap">
                     учебный план
                   </span>
                 </div>
-                <p className="text-sm leading-relaxed text-slate-500">
+                <p className="text-gray-500 text-sm leading-snug">
                   Дисциплины по семестрам и профилям подготовки — РКБП и ТВП.
                 </p>
               </div>
-              <svg className="h-5 w-5 flex-shrink-0 text-slate-300 transition-colors group-hover:text-teal-600" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                <path d="m7 4 6 6-6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              <span className="text-gray-300 group-hover:text-gray-500 text-2xl transition-colors flex-shrink-0">→</span>
             </Link>
           </div>
         </div>
